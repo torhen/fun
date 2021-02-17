@@ -148,6 +148,6 @@ while True:
             grid[x][y] = 1
         else:
             grid[x][y] = 0
-            paint(graph, grid)
+        paint(graph, grid)
 
 win.close()
