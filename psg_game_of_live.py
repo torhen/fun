@@ -26,6 +26,17 @@ def add_glider(grid):
     grid[px + 2][py + 1] = 1
     grid[px + 1][py + 0] = 1
 
+def add_spaceship(grid):
+    px, py = 0, len(grid) // 2
+    grid[px + 4][py + 3] = 1
+    grid[px + 4][py + 2] = 1
+    grid[px + 4][py + 1] = 1
+    grid[px + 3][py + 0] = 1
+    grid[px + 3][py + 3] = 1
+    grid[px + 2][py + 3] = 1
+    grid[px + 1][py + 3] = 1
+    grid[px + 0][py + 2] = 1
+
 
 def paint(graph, grid):
     graph.erase()
@@ -102,7 +113,8 @@ layout = [[
             sg.Button('start', key='-RUN-'), 
             sg.Button('random', key='-RAN-'),
             sg.Button('clear', key='-CLEAR-'), 
-            sg.Button('glider', key='-GLI-')           
+            sg.Button('glider', key='-GLI-'),
+            sg.Button('spaceship', key='-SPA-')            
             ],
           [sg.Graph(key='-GRA-', canvas_size=(XDIM * SCALE,YDIM * SCALE),
                     graph_bottom_left=(0,0),
@@ -143,6 +155,9 @@ while True:
         paint(graph, grid)
     elif event == '-GLI-':
         add_glider(grid)
+        paint(graph, grid)
+    elif event == '-SPA-':
+        add_spaceship(grid)
         paint(graph, grid)
     elif event == '-GRA-': # Mouse click
         x, y = values['-GRA-']
