@@ -114,6 +114,7 @@ layout = [[
             sg.Button('random', key='-RAN-'),
             sg.Button('clear', key='-CLEAR-'), 
             sg.Button('glider', key='-GLI-'),
+            sg.Button('spaceship', key='-SPA-'),
             sg.Slider(key='-TEMPO-', 
                 range = (10,1000), orientation='horizontal', 
                 enable_events=True, tooltip='interval in ms'),      
