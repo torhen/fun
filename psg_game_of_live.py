@@ -116,7 +116,8 @@ layout = [[
             sg.Button('glider', key='-GLI-'),
             sg.Button('spaceship', key='-SPA-'),
             sg.Slider(key='-TEMPO-', 
-                range = (10,1000), orientation='horizontal', 
+                range = (10,1000), default_value = 300,
+                orientation='horizontal', 
                 enable_events=True, tooltip='interval in ms'),      
             ],
           [sg.Graph(key='-GRA-', canvas_size=(XDIM * SCALE,YDIM * SCALE),
@@ -126,7 +127,7 @@ layout = [[
                     )]]
 
 
-win = sg.Window('test', layout, finalize=True)
+win = sg.Window('Game Of Live', layout, finalize=True)
 graph = win['-GRA-'] # type:sg.Graph
 
 # initialize grid
@@ -175,4 +176,3 @@ while True:
         timeout = values['-TEMPO-']
 
 win.close()
-
