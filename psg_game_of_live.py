@@ -16,17 +16,16 @@ def make_grid(x, y, kind):
             row.append(v)
 
         grid.append(row)
-
-    # glider
-    if kind == 'glider':
-        px, py = 10, 20
-        grid[px + 0][py + 0] = 1
-        grid[px + 1][py + 0] = 1
-        grid[px + 2][py + 0] = 1
-        grid[px + 2][py + 1] = 1
-        grid[px + 1][py + 2] = 1
-
     return grid
+
+def add_glider(grid):
+    px, py = 0, 0
+    grid[px + 0][py + 2] = 1
+    grid[px + 1][py + 2] = 1
+    grid[px + 2][py + 2] = 1
+    grid[px + 2][py + 1] = 1
+    grid[px + 1][py + 0] = 1
+
 
 def paint(graph, grid):
     graph.erase()
@@ -143,7 +142,7 @@ while True:
         grid = make_grid(XDIM, YDIM, 'zeros')
         paint(graph, grid)
     elif event == '-GLI-':
-        grid = make_grid(XDIM, YDIM, 'glider')
+        add_glider(grid)
         paint(graph, grid)
     elif event == '-GRA-': # Mouse click
         x, y = values['-GRA-']
