@@ -1,8 +1,9 @@
 import PySimpleGUI as sg
 import random
 
-XDIM, YDIM = 30, 30
-SCALE = 15
+XDIM, YDIM = 50, 50
+SCALE = 10
+SHOW_EMPTY_CELLS = 0
 
 def make_grid(x, y, kind):
     grid = []
@@ -33,10 +34,13 @@ def paint(graph, grid):
         for x in range(XDIM):
             if grid[x][y] == 1:
                 color = '#00aa00'
+                graph.draw_rectangle( (x,y), (x+1, y+1), fill_color=color)
             else:
                 color = 'white'
+                if SHOW_EMPTY_CELLS:
+                    graph.draw_rectangle( (x,y), (x+1, y+1), fill_color=color)
 
-            graph.draw_rectangle( (x,y), (x+SCALE, y+SCALE), fill_color=color)
+            
 
 def get_item(grid, y, x, null_value):
     yl = len(grid)
