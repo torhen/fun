@@ -114,7 +114,9 @@ layout = [[
             sg.Button('random', key='-RAN-'),
             sg.Button('clear', key='-CLEAR-'), 
             sg.Button('glider', key='-GLI-'),
-            sg.Button('spaceship', key='-SPA-')            
+            sg.Slider(key='-TEMPO-', 
+                range = (10,1000), orientation='horizontal', 
+                enable_events=True, tooltip='interval in ms'),      
             ],
           [sg.Graph(key='-GRA-', canvas_size=(XDIM * SCALE,YDIM * SCALE),
                     graph_bottom_left=(0,0),
@@ -131,8 +133,9 @@ grid = make_grid(XDIM, YDIM, 'zeros')
 paint(graph, grid)
 
 run = 0
+timeout = 10
 while True:
-    event, values = win.read(timeout=10)
+    event, values = win.read(timeout=timeout)
     if event == None:
         break
     elif event == '-RUN-':
@@ -167,5 +170,8 @@ while True:
         else:
             grid[x][y] = 0
         paint(graph, grid)
+    elif event == '-TEMPO-':
+        timeout = values['-TEMPO-']
 
 win.close()
+
