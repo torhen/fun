@@ -97,8 +97,8 @@ def develop(grid):
 
 layout = [[
             sg.Button('start', key='-RUN-'), 
-            sg.Button('clear', key='-CLEAR-'), 
             sg.Button('random', key='-RAN-'),
+            sg.Button('clear', key='-CLEAR-'), 
             sg.Button('glider', key='-GLI-')           
             ],
           [sg.Graph(key='-GRA-', canvas_size=(XDIM * SCALE,YDIM * SCALE),
@@ -148,4 +148,6 @@ while True:
             grid[x][y] = 1
         else:
             grid[x][y] = 0
-        paint(graph, grid)
+            paint(graph, grid)
+
+win.close()
