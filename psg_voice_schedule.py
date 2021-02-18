@@ -5,6 +5,7 @@ from pydub import AudioSegment
 import wave
 import scipy.io.wavfile as wf
 import numpy as np
+import pathlib, os
 # conda install ffmpeg needed
 
 def prolong_wav(src_wav, dst_wav, seconds):
@@ -61,6 +62,10 @@ def make_result_wav(text):
 
 
 def main():
+    if not pathlib.Path('tmp').is_dir():
+        os.mkdir('tmp')
+        print('tmp/ created.')
+
     layout = [
         [sg.Button('Create WAV', key='-RUN-')],
         [sg.Multiline(key='-TXT-', default_text=default_string, size=(100, 50))]
