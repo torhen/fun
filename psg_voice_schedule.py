@@ -7,7 +7,6 @@ import scipy.io.wavfile as wf
 import numpy as np
 # conda install ffmpeg needed
 
-
 def prolong_wav(src_wav, dst_wav, seconds):
     # read the src wave
     sr, data = wf.read(src_wav)
@@ -58,9 +57,7 @@ def make_result_wav(text):
         lfiles.append(file_name)
 
     cat_wavs(lfiles, 'result.wav')
-    print('finished')
-
-
+    print('result.wav saved.')
 
 
 def main():
@@ -115,7 +112,7 @@ if __name__ == '__main__':
     15 Rumpfbeugen
     15 Noch 15 Sekunden
 
-    115 Rumpfkreisen rechts herum
+    15 Rumpfkreisen rechts herum
     15 Rumpfkreisen links herum
 
     15 Am Türrahmen abstützen und hoch und runter
