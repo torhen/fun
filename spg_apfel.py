@@ -7,7 +7,7 @@ from PIL import Image
 def c_plane(re_min, re_max, re_steps, im_min, im_max, im_steps):
     ar = []
 
-    for im in np.linspace(im_min, im_max, im_steps):
+    for im in np.linspace(im_max, im_min, im_steps):
         row = []
         for re in np.linspace(re_min, re_max, re_steps):
             v = complex(re, im)
@@ -64,8 +64,9 @@ def main():
     X_SIZE = 800
     Y_SIZE = 800
     layout = [[
+                sg.Button('Zoom out', key='-ZOOMOUT-'),
                 sg.Text('', key='-TXT-', size=(20, 1)),
-                sg.Button('Zoom out', key='-ZOOMOUT-')
+                sg.Text('', key='-COORD-', size=(50, 1))
                ],
               [sg.Graph(key='-GRAPH-',
                         graph_bottom_left=(0, 0),
@@ -80,6 +81,7 @@ def main():
     middle = [-0.7, 0]
     radius = 1.5
 
+    win['-COORD-'].update(f'{middle} {radius}')
     make_png(win, X_SIZE, Y_SIZE, middle, radius, 'tmp.png')
     graph.draw_image('tmp.png', location=(0, Y_SIZE))
 
@@ -88,6 +90,7 @@ def main():
         if event is None:
             break
         elif event == '-RUN-':
+            win['-COORD-'].update(f'{middle} {radius}')
             make_png(win, X_SIZE, Y_SIZE, middle, radius, 'tmp.png')
             graph.draw_image('tmp.png', location=(0, Y_SIZE))
 
@@ -95,14 +98,16 @@ def main():
 
             x_mouse, y_mouse = values['-GRAPH-']
 
+
             # bring to cordsystem -1..1
-            x_norm = x_mouse * 2 / X_SIZE - 1.0
-            y_norm = y_mouse * 2 / Y_SIZE - 1.0
+            x_norm = x_mouse * 2 / (X_SIZE-1) - 1.0
+            y_norm = y_mouse * 2 / (Y_SIZE-1) - 1.0
 
             middle[0] = middle[0] + x_norm * radius
-            middle[1] = middle[1] - y_norm * radius
+            middle[1] = middle[1] + y_norm * radius
             radius = radius / 2
 
+            win['-COORD-'].update(f'{middle} {radius}')
             make_png(win, X_SIZE, Y_SIZE, middle, radius, 'tmp.png')
             graph.draw_image('tmp.png', location=(0, Y_SIZE))
         elif event == '-ZOOMOUT-':
