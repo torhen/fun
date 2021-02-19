@@ -66,7 +66,7 @@ def main():
     layout = [[
                 sg.Button('Zoom out', key='-ZOOMOUT-'),
                 sg.Text('', key='-TXT-', size=(15, 1)),
-                sg.Text('', key='-COORD-', size=(80, 1))
+                sg.Text('', key='-COORD-', size=(70, 1))
                ],
               [sg.Graph(key='-GRAPH-',
                         graph_bottom_left=(0, 0),
