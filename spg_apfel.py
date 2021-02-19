@@ -3,6 +3,7 @@ import cmath
 import numpy as np
 from PIL import Image
 
+
 def c_plane(re_min, re_max, re_steps, im_min, im_max, im_steps):
     ar = []
 
@@ -41,43 +42,67 @@ def calc(re_min, re_max, im_min, im_max, re_res, im_res, max_iter, thresh, win):
     return R
 
 
+def make_png(win, x_size, y_size, middle, radius, png_file):
+
+    re_min, re_max = middle[0] - radius, middle[0] + radius
+    im_min, im_max = middle[1] - radius, middle[1] + radius
+    max_iter = 100
+    thresh = 100
+
+    win['-TXT-'].update('calculation started')
+    a = calc(re_min, re_max, im_min, im_max, x_size, y_size, max_iter, thresh, win)
+    win['-TXT-'].update('calculation finished')
+
+    data = a
+    # Rescale to 0-255 and convert to uint8
+    rescaled = (255.0 / data.max() * (data - data.min())).astype(np.uint8)
+    im = Image.fromarray(rescaled)
+    im.save(png_file)
+
+
 def main():
     X_SIZE = 800
     Y_SIZE = 800
-    layout = [[sg.Button('run', key='-RUN-'), sg.Text('', key='-TXT-', size=(10,1))],
+    layout = [[sg.Text('', key='-TXT-', size=(20,1))],
               [sg.Graph(key='-GRAPH-',
                         graph_bottom_left=(0, 0),
                         graph_top_right=(X_SIZE, Y_SIZE),
-                        canvas_size=(X_SIZE, Y_SIZE))
+                        canvas_size=(X_SIZE, Y_SIZE),
+                        enable_events=True)
                         ]]
 
-    win = sg.Window('Apfel', layout)
-
+    win = sg.Window('Apfel', layout, finalize=True)
     graph = win['-GRAPH-'] # type:sg.Graph
+
+    middle = [-0.7, 0]
+    radius = 1.5
+
+    make_png(win, X_SIZE, Y_SIZE, middle, radius, 'tmp.png')
+    graph.draw_image('tmp.png', location=(0, Y_SIZE))
 
     while True:
         event, values = win.read()
         if event is None:
             break
         elif event == '-RUN-':
-
-            re_min, re_max = -2, 1
-            im_min, im_max = -1.5, 1.5
-            max_iter = 100
-            thresh = 100
-
-            win['-TXT-'].update('started')
-            a = calc(re_min, re_max, im_min, im_max, X_SIZE, Y_SIZE, max_iter, thresh, win)
-            win['-TXT-'].update('finished')
-
-
-            data = a
-            # Rescale to 0-255 and convert to uint8
-            rescaled = (255.0 / data.max() * (data - data.min())).astype(np.uint8)
-            im = Image.fromarray(rescaled)
-            im.save('tmp.png')
-
+            make_png(win, X_SIZE, Y_SIZE, middle, radius, 'tmp.png')
             graph.draw_image('tmp.png', location=(0, Y_SIZE))
+
+        elif event == '-GRAPH-':
+
+            x_mouse, y_mouse = values['-GRAPH-']
+
+            # bring to cordsystem -1..1
+            x_norm = x_mouse * 2 / X_SIZE - 1.0
+            y_norm = y_mouse * 2 / Y_SIZE - 1.0
+
+            middle[0] = middle[0] + x_norm * radius
+            middle[1] = middle[1] - y_norm * radius
+            radius = radius / 2
+
+            make_png(win, X_SIZE, Y_SIZE, middle, radius, 'tmp.png')
+            graph.draw_image('tmp.png', location=(0, Y_SIZE))
+
 
 
 if __name__ == '__main__':
