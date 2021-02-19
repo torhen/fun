@@ -63,7 +63,10 @@ def make_png(win, x_size, y_size, middle, radius, png_file):
 def main():
     X_SIZE = 800
     Y_SIZE = 800
-    layout = [[sg.Text('', key='-TXT-', size=(20,1))],
+    layout = [[
+                sg.Text('', key='-TXT-', size=(20, 1)),
+                sg.Button('Zoom out', key='-ZOOMOUT-')
+               ],
               [sg.Graph(key='-GRAPH-',
                         graph_bottom_left=(0, 0),
                         graph_top_right=(X_SIZE, Y_SIZE),
@@ -102,7 +105,11 @@ def main():
 
             make_png(win, X_SIZE, Y_SIZE, middle, radius, 'tmp.png')
             graph.draw_image('tmp.png', location=(0, Y_SIZE))
+        elif event == '-ZOOMOUT-':
+            radius = radius * 2
 
+            make_png(win, X_SIZE, Y_SIZE, middle, radius, 'tmp.png')
+            graph.draw_image('tmp.png', location=(0, Y_SIZE))
 
 
 if __name__ == '__main__':
