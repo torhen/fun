@@ -42,11 +42,13 @@ def calc(re_min, re_max, im_min, im_max, re_res, im_res, max_iter, thresh, win):
 
 
 def main():
+    X_SIZE = 800
+    Y_SIZE = 800
     layout = [[sg.Button('run', key='-RUN-'), sg.Text('', key='-TXT-', size=(10,1))],
               [sg.Graph(key='-GRAPH-',
                         graph_bottom_left=(0, 0),
-                        graph_top_right=(500, 500),
-                        canvas_size=(500, 500))
+                        graph_top_right=(X_SIZE, Y_SIZE),
+                        canvas_size=(X_SIZE, Y_SIZE))
                         ]]
 
     win = sg.Window('Apfel', layout)
@@ -61,12 +63,11 @@ def main():
 
             re_min, re_max = -2, 1
             im_min, im_max = -1.5, 1.5
-            re_res, im_res = 500, 500
             max_iter = 100
             thresh = 100
 
             win['-TXT-'].update('started')
-            a = calc(re_min, re_max, im_min, im_max, re_res, im_res, max_iter, thresh, win)
+            a = calc(re_min, re_max, im_min, im_max, X_SIZE, Y_SIZE, max_iter, thresh, win)
             win['-TXT-'].update('finished')
 
 
@@ -74,9 +75,9 @@ def main():
             # Rescale to 0-255 and convert to uint8
             rescaled = (255.0 / data.max() * (data - data.min())).astype(np.uint8)
             im = Image.fromarray(rescaled)
-            im.save('test.png')
+            im.save('tmp.png')
 
-            graph.draw_image('test.png', location=(0, 500))
+            graph.draw_image('tmp.png', location=(0, Y_SIZE))
 
 
 if __name__ == '__main__':
