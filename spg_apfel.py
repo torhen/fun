@@ -1,7 +1,7 @@
 import PySimpleGUI as sg
 import cmath
 import numpy as np
-
+from PIL import Image
 
 def c_plane(re_min, re_max, re_steps, im_min, im_max, im_steps):
     ar = []
@@ -45,7 +45,7 @@ def main():
     layout = [[sg.Button('run', key='-RUN-'), sg.Text('', key='-TXT-', size=(10,1))],
               [sg.Graph(key='-GRAPH-',
                         graph_bottom_left=(0, 0),
-                        graph_top_right=(100, 100),
+                        graph_top_right=(500, 500),
                         canvas_size=(500, 500))
                         ]]
 
@@ -61,23 +61,22 @@ def main():
 
             re_min, re_max = -2, 1
             im_min, im_max = -1.5, 1.5
-            re_res, im_res = 300, 300
-            max_iter = 1000
-            thresh = 1000
+            re_res, im_res = 500, 500
+            max_iter = 100
+            thresh = 100
 
             win['-TXT-'].update('started')
             a = calc(re_min, re_max, im_min, im_max, re_res, im_res, max_iter, thresh, win)
             win['-TXT-'].update('finished')
 
-            height, width = a.shape
-            graph.change_coordinates((0, 0), (width, height))
 
-            for y in range(height):
-                for x in range(width):
-                    v = int(a[y, x])
-                    v = int(v * 2.5)
-                    color = "#%02x%02x%02x" % (0, v, 255-v)
-                    graph.draw_rectangle((x, y), (x+1, y+1),fill_color=color, line_color=color)
+            data = a
+            # Rescale to 0-255 and convert to uint8
+            rescaled = (255.0 / data.max() * (data - data.min())).astype(np.uint8)
+            im = Image.fromarray(rescaled)
+            im.save('test.png')
+
+            graph.draw_image('test.png', location=(0, 500))
 
 
 if __name__ == '__main__':
