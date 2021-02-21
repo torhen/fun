@@ -20,9 +20,6 @@ class Sig:
     def size(self):
         return len(self.array)
 
-    def is_sig(self):
-        return True
-
     def make_sig(self, arg):
         # if sig is number, create Sig object"
         try:
@@ -60,14 +57,6 @@ class Sig:
 
     def __add__(self, sig):
         a = self.array + sig.array
-        return Sig(array=a)
-
-    def __mul__(self, factor):
-        try:
-            factor.is_sig()
-            a = self.array * factor.array
-        except:
-            a = self.array * factor
         return Sig(array=a)
 
     def range(self, min, max):
@@ -112,18 +101,20 @@ class Sig:
         env = np.append(env, sus_ar)
         env = np.append(env, rel_ar)
 
-        if len(env) > len(self.array):
-            env = env[0:len(self.array)]
-
-        if len(env) < len(self.array):
-            n = len(self.array) - len(env)
-            env = np.append(env, np.zeros(n))
+        # bring asr to same length
+        env = np.resize(env, self.array.shape)
 
         return Sig(array=env)
 
-    def mul(self, factor):
-        factor = self.make_sig(factor)
-        a = self.array * factor.array
+
+    def mul_float(self, factor):
+        a = self.array * factor
+        return Sig(array=a)
+
+    def mul_sig(self, other_sig):
+        # bring other to same length
+        other_array = np.resize(other_sig.array, self.array.shape)
+        a = self.array * other_array
         return Sig(array=a)
 
 
@@ -239,7 +230,7 @@ def seq(secs, instr=None, abc=None, degrees=None, deltas=1, amps=1, legato=1, st
     os = 0
     for freq, delta, amp, length in zip(freqs, deltas, amps, lengths):
         tone = make_chord(instr, freq, length)
-        tone = tone * amp
+        tone = tone.mul_float(amp)
         s = tone.size()
         a[os:s + os] = a[os:s + os] + tone.array[0:s]
         os = os + int(44100 * delta)
@@ -311,29 +302,43 @@ def abc2deg(abc, stretch=1):
 
 def get_instr_str():
     instr_def = """\
-    def my_instrument(freq, length):
-        atk = 0.01
-        sus = length - atk
-        rel = 0.5
-        le = atk + sus + rel
-        env = Sig(le).asr(atk, sus, rel)
-        sig1 = Sig(le).rect(freq).mul(env).mul(0.1)
-        sig2 = Sig(le).rect(freq * 1.01).mul(env).mul(0.1)
-        res = sig1 + sig2
-        return res * 0.5
+def my_instrument(freq, length):
+    atk = 0.01
+    sus = length - atk
+    rel = 0.5
+    le = atk + sus + rel
+    env = Sig(le).asr(atk, sus, rel)
+    sig1 = Sig(le).rect(freq).mul_sig(env).mul_float(0.1)
+    sig2 = Sig(le).rect(freq * 1.01).mul_sig(env).mul_float(0.1)
+    res = sig1 + sig2
+    return res.mul_float(0.5)
     """
     return instr_def
 
 
 
 def get_abc_str():
-    abc = """
-        CDEFG2G2 AAAAG4 AAAAG4 FFFFE2E2 GGGGC4
+    abc = """\
+CDEFG2G2 AAAAG4 AAAAG4 FFFFE2E2 GGGGC4
         """
     return abc
 
 
+def test_instr(freq, length):
+    atk = 0.01
+    sus = length - atk
+    rel = 0.5
+    le = atk + sus + rel
+    env = Sig(le).asr(atk, sus, rel)
+    sig1 = Sig(le).rect(freq).mul_sig(env).mul_float(0.1)
+    sig2 = Sig(le).rect(freq * 1.01).mul_sig(env).mul_float(0.1)
+    res = sig1 + sig2
+    return res.mul_float(0.5)
+
+
 if __name__ == '__main__':
+    # test
+    test = test_instr(440, 1)
 
     layout = [
         [sg.Multiline('def', key='-INSTR-', size=(70, 20))],
@@ -348,6 +353,7 @@ if __name__ == '__main__':
     win['-INSTR-'].update(instr_str)
     abc_str = get_abc_str()
     win['-ABC-'].update(abc_str)
+
 
     while True:
         event, values = win.read()
@@ -366,7 +372,7 @@ if __name__ == '__main__':
                 continue
 
             stretch = float(values['-STRETCH-'])
-            song = seq(instr=my_instrument, secs=30, abc=abc_str, legato=0.3, stretch=stretch)
+            song = seq(instr=my_instrument, secs=60, abc=abc_str, legato=0.3, stretch=stretch)
 
             int_array = (song.array * 32767).astype(np.int16)
             wf.write('test.wav', song.sr, int_array)
