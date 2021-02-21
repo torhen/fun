@@ -338,7 +338,7 @@ if __name__ == '__main__':
     layout = [
         [sg.Multiline('def', key='-INSTR-', size=(70, 20))],
         [sg.Multiline('abd', key='-ABC-', size=(70, 20))],
-        [sg.Button('run', key='-RUN-')]
+        [sg.Button('run', key='-RUN-'), sg.Button('stop', key='-STOP-')]
     ]
 
     win = sg.Window('Sequencer', layout, finalize=True)
@@ -366,4 +366,5 @@ if __name__ == '__main__':
             int_array = (song.array * 32767).astype(np.int16)
             wf.write('test.wav', song.sr, int_array)
             winsound.PlaySound('test.wav', winsound.SND_ASYNC)
-
+        elif event == '-STOP-':
+            winsound.PlaySound(None, winsound.SND_PURGE)
