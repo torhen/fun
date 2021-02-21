@@ -126,33 +126,72 @@ class Sig:
         a = self.array * other_array
         return Sig(array=a)
 
-
-class Seq:
-    def __init__(self, secs, instr, abc, amps=1, legato=1, stretch=1):
+class Abc:
+    def __init__(self, abc, stretch):
 
         degrees, deltas = self.abc2deg(abc, stretch=stretch)
-
         freqs = self.degs2freqs(degrees)
 
-        if not self.is_iter(amps):
-            amps = [amps] * len(freqs)
+        self.freqs = freqs
+        self.deltas = deltas
 
-        # calc the length s
-        lengths = [d * legato for d in deltas]
+    def abc_dict(self, abc_note):
+        pattern = r"(\^?)([A-G,a-g,z])('*,*)(\d*/?\d*)"
+        m = re.match(pattern, abc_note)
+        vorz = m.group(1)
+        pitch = m.group(2)
+        oc = m.group(3)
+        le = m.group(4)
 
-        # try find length, needs improvement
-        first = self.make_chord(instr, freqs[0], deltas[0])
-        size = secs * first.sr
+        abc_dict = {
+            'abc': abc_note,
+            'vorz': vorz,
+            'pitch': pitch,
+            'oc': oc,
+            'le': le
+        }
 
-        a = np.zeros(int(size))
-        os = 0
-        for freq, delta, amp, length in zip(freqs, deltas, amps, lengths):
-            tone = self.make_chord(instr, freq, length)
-            tone = tone.mul_float(amp)
-            s = tone.size()
-            a[os:s + os] = a[os:s + os] + tone.array[0:s]
-            os = os + int(44100 * delta)
-        self.Sig = Sig(array=a)
+        return abc_dict
+
+    def abc_trans(swlf, abc_dict):
+        vorz = abc_dict['vorz']  # _ or ^
+        pitch = abc_dict['pitch']  # A-G, a-g, z
+        oc = abc_dict['oc']  # , '
+        le = abc_dict['le']  # empty, or /2, or 3/4
+
+        dpitch = {
+            'z': 0,
+            'C': 41, 'D': 42, 'E': 43, 'F': 44, 'G': 45, 'A': 46, 'B': 47,
+            'c': 51, 'd': 52, 'e': 53, 'f': 54, 'g': 55, 'a': 56, 'b': 57
+        }
+
+        if le == '':
+            le = '1'
+
+        if le.startswith('/'):
+            le = '1' + le
+        dur = eval(le)
+
+        octave = oc.count("'") * 10
+        octave = octave - oc.count(",") * 10
+
+        deg = dpitch[pitch] + octave
+        return (deg, dur)
+
+    def degs2freqs(self, degrees):
+        # make all iterabel
+        degs_iter = []
+        for deg in degrees:
+            if not self.is_iter(deg):
+                deg = [deg]
+            degs_iter.append(deg)
+
+        freqs = []
+        for chord in degs_iter:
+            chf = [self.deg2freq(d) for d in chord]
+            freqs.append(chf)
+
+        return freqs
 
     def abc_dict(self, abc_note):
         pattern = r"(\^?)([A-G,a-g,z])('*,*)(\d*/?\d*)"
@@ -216,70 +255,6 @@ class Seq:
 
         return degrees, durs
 
-    def abc_dict(self, abc_note):
-        pattern = r"(\^?)([A-G,a-g,z])('*,*)(\d*/?\d*)"
-        m = re.match(pattern, abc_note)
-        vorz = m.group(1)
-        pitch = m.group(2)
-        oc = m.group(3)
-        le = m.group(4)
-
-        abc_dict = {
-            'abc': abc_note,
-            'vorz': vorz,
-            'pitch': pitch,
-            'oc': oc,
-            'le': le
-        }
-
-        return abc_dict
-
-    def abc_trans(swlf, abc_dict):
-        vorz = abc_dict['vorz']  # _ or ^
-        pitch = abc_dict['pitch']  # A-G, a-g, z
-        oc = abc_dict['oc']  # , '
-        le = abc_dict['le']  # empty, or /2, or 3/4
-
-        dpitch = {
-            'z': 0,
-            'C': 41, 'D': 42, 'E': 43, 'F': 44, 'G': 45, 'A': 46, 'B': 47,
-            'c': 51, 'd': 52, 'e': 53, 'f': 54, 'g': 55, 'a': 56, 'b': 57
-        }
-
-        if le == '':
-            le = '1'
-
-        if le.startswith('/'):
-            le = '1' + le
-        dur = eval(le)
-
-        octave = oc.count("'") * 10
-        octave = octave - oc.count(",") * 10
-
-        deg = dpitch[pitch] + octave
-        return (deg, dur)
-
-    def degs2freqs(self, degrees):
-        # make all iterabel
-        degs_iter = []
-        for deg in degrees:
-            if not self.is_iter(deg):
-                deg = [deg]
-            degs_iter.append(deg)
-
-        freqs = []
-        for chord in degs_iter:
-            chf = [self.deg2freq(d) for d in chord]
-            freqs.append(chf)
-
-        return freqs
-
-    def is_iter(self, x):
-        try:
-            _ = (e for e in x)
-            return True
-        except TypeError:
-            return False
 
     def deg2freq(self, degree):
         "convert single degree to frequency"
@@ -307,12 +282,59 @@ class Seq:
         freq = htones[htone_index] * (2 ** oc)
         return freq
 
-    def make_chord(self, instr, freq, dur):
-        if not self.is_iter(freq):
-            freq = [freq]
+    def is_iter(self, x):
+        try:
+            _ = (e for e in x)
+            return True
+        except TypeError:
+            return False
 
-        sig = instr(freq[0], dur)
-        for f in freq[1:]:
+class Seq:
+    def __init__(self, secs, instr, abc, amps=1, legato=1, stretch=1):
+
+        abc = Abc(abc, stretch)
+        freqs = abc.freqs
+        deltas = abc.deltas
+
+        if not self.is_iter(amps):
+            amps = [amps] * len(freqs)
+
+        # calc the length s
+        lengths = [d * legato for d in deltas]
+
+        # try find length, needs improvement
+        first = self.make_chord(instr, freqs[0], deltas[0])
+        size = secs * first.sr
+
+        a = np.zeros(int(size))
+        os = 0
+
+        for freq, delta, amp, length in zip(freqs, deltas, amps, lengths):
+            tone = self.make_chord(instr, freq, length)
+            tone = tone * amp
+
+            # add tone to result
+            s = tone.size()
+            a[os:s + os] = a[os:s + os] + tone.array[0:s]
+            os = os + int(44100 * delta)
+        self.Sig = Sig(array=a)
+
+
+    def is_iter(self, x):
+        try:
+            _ = (e for e in x)
+            return True
+        except TypeError:
+            return False
+
+
+    def make_chord(self, instr, freqs, dur):
+        """takes list of frequencies and create sig"""
+        if not self.is_iter(freqs):
+            freqs = [freqs]
+
+        sig = instr(freqs[0], dur)
+        for f in freqs[1:]:
             sig = sig + instr(f, dur, amp)
         return sig
 
@@ -395,3 +417,4 @@ if __name__ == '__main__':
             winsound.PlaySound('test.wav', winsound.SND_ASYNC)
         elif event == '-STOP-':
             winsound.PlaySound(None, winsound.SND_PURGE)
+
