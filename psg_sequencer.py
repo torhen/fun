@@ -361,9 +361,9 @@ if __name__ == '__main__':
                 exec(instr_str.strip())
                 # test function
                 test = my_instrument(440, 1)
-            except:
-                sg.popup('Error in  instrument defiinition')
-                break
+            except Exception as e:
+                sg.popup('Error in  instrument defiinition', e)
+                continue
 
             stretch = float(values['-STRETCH-'])
             song = seq(instr=my_instrument, secs=30, abc=abc_str, legato=0.3, stretch=stretch)
