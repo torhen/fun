@@ -106,8 +106,17 @@ class Sig:
 
         return Sig(array=env)
 
+    def __mul__(self, factor):
+        return self.mul(factor)
+
+    def mul(self, factor):
+        try:
+            return self.mul_sig(factor)
+        except:
+            return self.mul_float(factor)
 
     def mul_float(self, factor):
+        factor = float(factor)
         a = self.array * factor
         return Sig(array=a)
 
@@ -301,6 +310,7 @@ def abc2deg(abc, stretch=1):
 
 
 def get_instr_str():
+    """define star instrument"""
     instr_def = """\
 def my_instrument(freq, length):
     atk = 0.01
@@ -308,10 +318,10 @@ def my_instrument(freq, length):
     rel = 0.5
     le = atk + sus + rel
     env = Sig(le).asr(atk, sus, rel)
-    sig1 = Sig(le).rect(freq).mul_sig(env).mul_float(0.1)
-    sig2 = Sig(le).rect(freq * 1.01).mul_sig(env).mul_float(0.1)
+    sig1 = Sig(le).rect(freq).mul(0.2)
+    sig2 = Sig(le).rect(freq * 1.01).mul(0.2)
     res = sig1 + sig2
-    return res.mul_float(0.5)
+    return res * env * 0.5
     """
     return instr_def
 
