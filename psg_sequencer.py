@@ -3,6 +3,7 @@ import re
 import scipy.io.wavfile as wf
 import winsound
 import time
+import PySimpleGUI as sg
 
 class Sig:
     def __init__(self, sec=1, const=0, array=None):
@@ -308,16 +309,61 @@ def abc2deg(abc, stretch=1):
     return degrees, durs
 
 
-abc = """
-CDEFG2G2 AAAAG4 AAAAG4 FFFFE2E2 GGGGC4
-"""
+def get_instr_str():
+    instr_def = """\
+    def my_instrument(freq, length):
+        atk = 0.01
+        sus = length - atk
+        rel = 0.5
+        le = atk + sus + rel
+        env = Sig(le).asr(atk, sus, rel)
+        sig1 = Sig(le).rect(freq).mul(env).mul(0.1)
+        sig2 = Sig(le).rect(freq * 1.01).mul(env).mul(0.1)
+        res = sig1 + sig2
+        return res * 0.5
+    """
+    return instr_def
 
-song = seq(secs=30, abc=abc, legato=0.3, stretch=0.5)
 
-int_array = (song.array * 32767).astype(np.int16)
-int_array = int_array // 10 # too loud
 
-wf.write('test.wav', song.sr, int_array)
-winsound.PlaySound('test.wav', winsound.SND_ASYNC)
+def get_abc_str():
+    abc = """
+        CDEFG2G2 AAAAG4 AAAAG4 FFFFE2E2 GGGGC4
+        """
+    return abc
 
-time.sleep(10)
+
+if __name__ == '__main__':
+
+    layout = [
+        [sg.Multiline('def', key='-INSTR-', size=(70, 20))],
+        [sg.Multiline('abd', key='-ABC-', size=(70, 20))],
+        [sg.Button('run', key='-RUN-')]
+    ]
+
+    win = sg.Window('Sequencer', layout, finalize=True)
+
+    instr_str = get_instr_str()
+    win['-INSTR-'].update(instr_str)
+    abc_str = get_abc_str()
+    win['-ABC-'].update(abc_str)
+
+    while True:
+        event, values = win.read()
+        if event is None:
+            break
+        elif event == '-RUN-':
+
+            instr_str = values['-INSTR-']
+            abc_str = values['-ABC-']
+            try:
+                exec(instr_str.strip())
+            except:
+                sg.popup('Error in  instrument defiinition')
+                break
+            song = seq(instr=my_instrument, secs=30, abc=abc_str, legato=0.3, stretch=0.5)
+
+            int_array = (song.array * 32767).astype(np.int16)
+            wf.write('test.wav', song.sr, int_array)
+            winsound.PlaySound('test.wav', winsound.SND_ASYNC)
+
