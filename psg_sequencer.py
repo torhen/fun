@@ -338,6 +338,7 @@ if __name__ == '__main__':
     layout = [
         [sg.Multiline('def', key='-INSTR-', size=(70, 20))],
         [sg.Multiline('abd', key='-ABC-', size=(70, 20))],
+        [sg.Text('stretch'), sg.Input('0.5', key='-STRETCH-', size=(8,))],
         [sg.Button('run', key='-RUN-'), sg.Button('stop', key='-STOP-')]
     ]
 
@@ -358,10 +359,14 @@ if __name__ == '__main__':
             abc_str = values['-ABC-']
             try:
                 exec(instr_str.strip())
+                # test function
+                test = my_instrument(440, 1)
             except:
                 sg.popup('Error in  instrument defiinition')
                 break
-            song = seq(instr=my_instrument, secs=30, abc=abc_str, legato=0.3, stretch=0.5)
+
+            stretch = float(values['-STRETCH-'])
+            song = seq(instr=my_instrument, secs=30, abc=abc_str, legato=0.3, stretch=stretch)
 
             int_array = (song.array * 32767).astype(np.int16)
             wf.write('test.wav', song.sr, int_array)
