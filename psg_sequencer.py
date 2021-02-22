@@ -73,6 +73,11 @@ class Sig:
         return Sig(array=a)
 
     def asr(self, atk, sus, rel):
+
+        # avoid crash when editing instrument
+        if atk < 0.0: atk = 0.0
+        if sus < 0.0: sus = 0.0
+        if rel < 0.0: rel = 0.0
         atk_ar = np.linspace(0, 1, int(self.sr * atk))
         sus_ar = np.linspace(1, 1, int(self.sr * sus))
         rel_ar = np.linspace(1, 0, int(self.sr * rel))
@@ -130,6 +135,7 @@ class Abc:
                 freq_chord.append(freq)
             freqs.append(freq_chord)
 
+        deltas = [d * stretch for d in deltas]
 
         self.abc = abc
         self.freqs = freqs
@@ -249,7 +255,7 @@ class Abc:
 
 
 class Seq:
-    def __init__(self, secs, instr, abc, amps=1.0, legato=1.0, stretch=1.0):
+    def __init__(self, secs, instr, abc, amps, stretch, legato=1.0):
 
         abc = Abc(abc, stretch)
         freqs = abc.freqs
@@ -291,25 +297,25 @@ class Seq:
         if not self.is_iter(freqs):
             freqs = [freqs]
 
-        sig = instr(freqs[0], dur, amp)
+        sig = instr(freqs[0], dur)
         for f in freqs[1:]:
-            sig = sig + instr(f, dur, amp)
+            sig = sig + instr(f, dur) * amp
         return sig
 
 
 def get_instr_str():
     """define star instrument"""
     instr_def = """\
-def my_instrument(freq, length, amp):
+def my_instrument(freq, length):
     atk = 0.01
     sus = length - atk
     rel = 0.5
     le = atk + sus + rel
     env = Sig(le).asr(atk, sus, rel)
-    sig1 = Sig(le).rect(freq).mul(0.2)
-    sig2 = Sig(le).rect(freq * 1.01).mul(0.2)
+    sig1 = Sig(le).rect(freq * 0.99)
+    sig2 = Sig(le).rect(freq * 1.00)
     res = sig1 + sig2
-    return res * env * 0.3
+    return res * env
     """
     return instr_def
 
@@ -321,18 +327,6 @@ C/2E/2G/2[EGc]
     return abc
 
 
-def test_instr(freq, length, amp):
-    atk = 0.01
-    sus = length - atk
-    rel = 0.5
-    le = atk + sus + rel
-    env = Sig(le).asr(atk, sus, rel)
-    sig1 = Sig(le).rect(freq).mul_sig(env).mul_float(0.1)
-    sig2 = Sig(le).rect(freq * 1.01).mul_sig(env).mul_float(0.1)
-    res = sig1 + sig2
-    return res.mul_float(0.5)
-
-
 if __name__ == '__main__':
     # test a instrument for error solving
     # test = test_instr(440, 1)
@@ -340,7 +334,9 @@ if __name__ == '__main__':
     layout = [
         [sg.Multiline('def', key='-INSTR-', size=(70, 20))],
         [sg.Multiline('abd', key='-ABC-', size=(70, 20))],
-        [sg.Text('stretch'), sg.Input('0.5', key='-STRETCH-', size=(8,))],
+        [sg.Text('stretch'), sg.Input('1.0', key='-STRETCH-', size=(5,)),
+         sg.Text('volume'), sg.Input('0.1', key='-VOL-', size=(5,)),
+         ],
         [sg.Button('run', key='-RUN-'), sg.Button('stop', key='-STOP-')]
     ]
 
@@ -360,29 +356,31 @@ if __name__ == '__main__':
             instr_str = values['-INSTR-']
             abc_str = values['-ABC-']
 
-            def my_instrument(freq, length, amp):
-                """placeholder def to avoid linter error, also for debugging
-                overwritten by user text"""
-                atk = 0.01
-                sus = length - atk
-                rel = 0.5
-                le = atk + sus + rel
-                env = Sig(le).asr(atk, sus, rel)
-                sig1 = Sig(le).rect(freq).mul(0.2)
-                sig2 = Sig(le).rect(freq * 1.01).mul(0.2)
-                res = sig1 + sig2
-                return res * env * 0.5
+
+            # def my_instrument(freq, length):
+            #     atk = 0.01
+            #     sus = length - atk
+            #     rel = 0.5
+            #     le = atk + sus + rel
+            #     env = Sig(le).asr(atk, sus, rel)
+            #     sig1 = Sig(le).rect(freq * 0.99)
+            #     sig2 = Sig(le).rect(freq * 1.00)
+            #     res = sig1 + sig2
+            #     return res * env
 
             try:
                 exec(instr_str.strip())
                 # test function
-                test = my_instrument(440, 1, 1)
+                test = my_instrument(440, 1)
             except Exception as e:
                 sg.popup('Error in  instrument defiinition', e)
                 continue
 
             stretch = float(values['-STRETCH-'])
-            song = Seq(instr=my_instrument, secs=60, abc=abc_str, legato=0.3, stretch=stretch).Sig
+            amps = float(values['-VOL-'])
+
+            # create tho song
+            song = Seq(instr=my_instrument, secs=60, abc=abc_str, amps=amps, legato=0.3, stretch=stretch).Sig
 
             int_array = (song.array * 32767).astype(np.int16)
             wf.write('test.wav', song.sr, int_array)
