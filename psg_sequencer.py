@@ -2,11 +2,11 @@ import numpy as np
 import re
 import scipy.io.wavfile as wf
 import winsound
-import time
 import PySimpleGUI as sg
 
+
 class Sig:
-    def __init__(self, sec=1, const=0, array=None):
+    def __init__(self, sec=1.0, const=0.0, array=None):
         self.sr = 44100
         if array is not None:
             self.array = array
@@ -34,26 +34,6 @@ class Sig:
         a = a / self.sr
         a = np.cumsum(a)
         return Sig(array=a)
-
-    def plot(self, start_sec=0, end_sec=None):
-        if end_sec is None:
-            end_sec = self.sec()
-        n1 = int(self.sr * start_sec)
-        n2 = int(self.sr * end_sec)
-        a = self.array[n1:n2]
-        plt.plot(a)
-
-    def play(self, start_sec=0, end_sec=None):
-        if end_sec is None:
-            end_sec = self.sec()
-        n1 = int(self.sr * start_sec)
-        n2 = int(self.sr * end_sec)
-        a = self.array[n1:n2]
-        return Audio(a, rate=self.sr, autoplay=True, normalize=False)
-
-    def const(self, c):
-        sig = Sig(self.sec, const=c)
-        return sig
 
     def __add__(self, sig):
         a = self.array + sig.array
@@ -128,7 +108,6 @@ class Sig:
 
 class Abc:
     def __init__(self, abc, stretch):
-
         degrees, deltas = self.abc2deg(abc, stretch=stretch)
         freqs = self.degs2freqs(degrees)
 
@@ -193,51 +172,6 @@ class Abc:
 
         return freqs
 
-    def abc_dict(self, abc_note):
-        pattern = r"(\^?)([A-G,a-g,z])('*,*)(\d*/?\d*)"
-        m = re.match(pattern, abc_note)
-        vorz = m.group(1)
-        pitch = m.group(2)
-        oc = m.group(3)
-        le = m.group(4)
-
-        abc_dict = {
-            'abc': abc_note,
-            'vorz': vorz,
-            'pitch': pitch,
-            'oc': oc,
-            'le': le
-        }
-
-        return abc_dict
-
-
-    def abc_trans(self, abc_dict):
-        vorz = abc_dict['vorz']  # _ or ^
-        pitch = abc_dict['pitch']  # A-G, a-g, z
-        oc = abc_dict['oc']  # , '
-        le = abc_dict['le']  # empty, or /2, or 3/4
-
-        dpitch = {
-            'z': 0,
-            'C': 41, 'D': 42, 'E': 43, 'F': 44, 'G': 45, 'A': 46, 'B': 47,
-            'c': 51, 'd': 52, 'e': 53, 'f': 54, 'g': 55, 'a': 56, 'b': 57
-        }
-
-        if le == '':
-            le = '1'
-
-        if le.startswith('/'):
-            le = '1' + le
-        dur = eval(le)
-
-        octave = oc.count("'") * 10
-        octave = octave - oc.count(",") * 10
-
-        deg = dpitch[pitch] + octave
-        return (deg, dur)
-
-
     def abc2deg(self, abc, stretch=1):
         pattern = r"\^?[A-G,a-g,z]'*,*\d*/?\d*"
         notes = re.findall(pattern, abc)
@@ -255,9 +189,8 @@ class Abc:
 
         return degrees, durs
 
-
     def deg2freq(self, degree):
-        "convert single degree to frequency"
+        """convert single degree to frequency"""
         if degree < 0:
             deminish = 1
         else:
@@ -289,8 +222,9 @@ class Abc:
         except TypeError:
             return False
 
+
 class Seq:
-    def __init__(self, secs, instr, abc, amps=1, legato=1, stretch=1):
+    def __init__(self, secs, instr, abc, amps=1.0, legato=1.0, stretch=1.0):
 
         abc = Abc(abc, stretch)
         freqs = abc.freqs
@@ -303,14 +237,14 @@ class Seq:
         lengths = [d * legato for d in deltas]
 
         # try find length, needs improvement
-        first = self.make_chord(instr, freqs[0], deltas[0])
+        first = self.make_chord(instr, freqs[0], deltas[0], amps[0])
         size = secs * first.sr
 
         a = np.zeros(int(size))
         os = 0
 
         for freq, delta, amp, length in zip(freqs, deltas, amps, lengths):
-            tone = self.make_chord(instr, freq, length)
+            tone = self.make_chord(instr, freq, length, amp)
             tone = tone * amp
 
             # add tone to result
@@ -319,29 +253,29 @@ class Seq:
             os = os + int(44100 * delta)
         self.Sig = Sig(array=a)
 
-
-    def is_iter(self, x):
+    @staticmethod
+    def is_iter(x):
         try:
             _ = (e for e in x)
             return True
         except TypeError:
             return False
 
-
-    def make_chord(self, instr, freqs, dur):
+    def make_chord(self, instr, freqs, dur, amp):
         """takes list of frequencies and create sig"""
         if not self.is_iter(freqs):
             freqs = [freqs]
 
-        sig = instr(freqs[0], dur)
+        sig = instr(freqs[0], dur, amp)
         for f in freqs[1:]:
             sig = sig + instr(f, dur, amp)
         return sig
 
+
 def get_instr_str():
     """define star instrument"""
     instr_def = """\
-def my_instrument(freq, length):
+def my_instrument(freq, length, amp):
     atk = 0.01
     sus = length - atk
     rel = 0.5
@@ -350,10 +284,9 @@ def my_instrument(freq, length):
     sig1 = Sig(le).rect(freq).mul(0.2)
     sig2 = Sig(le).rect(freq * 1.01).mul(0.2)
     res = sig1 + sig2
-    return res * env * 0.5
+    return res * env * amp
     """
     return instr_def
-
 
 
 def get_abc_str():
@@ -363,7 +296,7 @@ CDEFG2G2 AAAAG4 AAAAG4 FFFFE2E2 GGGGC4
     return abc
 
 
-def test_instr(freq, length):
+def test_instr(freq, length, amp):
     atk = 0.01
     sus = length - atk
     rel = 0.5
@@ -402,9 +335,11 @@ if __name__ == '__main__':
             instr_str = values['-INSTR-']
             abc_str = values['-ABC-']
             try:
+                # placeholder def to avoid linter error
+                def my_instrument(freq, length, amp): return 0
                 exec(instr_str.strip())
                 # test function
-                test = my_instrument(440, 1)
+                test = my_instrument(440, 1, 1)
             except Exception as e:
                 sg.popup('Error in  instrument defiinition', e)
                 continue
@@ -415,6 +350,7 @@ if __name__ == '__main__':
             int_array = (song.array * 32767).astype(np.int16)
             wf.write('test.wav', song.sr, int_array)
             winsound.PlaySound('test.wav', winsound.SND_ASYNC)
+
         elif event == '-STOP-':
             winsound.PlaySound(None, winsound.SND_PURGE)
 
