@@ -106,13 +106,77 @@ class Sig:
         a = self.array * other_array
         return Sig(array=a)
 
+
 class Abc:
     def __init__(self, abc, stretch):
-        degrees, deltas = self.abc2deg(abc, stretch=stretch)
-        freqs = self.degs2freqs(degrees)
 
+        # split in groups
+        # chords seperated by whitespace
+        # tones of chords separated by |
+        splitted = self.split_abc(abc)
+
+        # bring to list of list structure
+        lol_str = self.make_lol_str(splitted)
+
+        # translate to degrees and durations
+        degs, deltas = self.make_deg_lol(lol_str)
+
+        # translate degrees to frequencies
+        freqs = []
+        for chord in degs:
+            freq_chord = []
+            for deg in chord:
+                freq = self.deg2freq(deg)
+                freq_chord.append(freq)
+            freqs.append(freq_chord)
+
+
+        self.abc = abc
         self.freqs = freqs
         self.deltas = deltas
+
+        # self.freqs = [[440],[550],[660], [440,550,660]]
+        # self.deltas = [1,1,1,1]
+
+    def make_deg_lol(self, lol_str):
+        freqs = []
+        deltas = []
+        for chord in lol_str:
+            deg_chord = []
+            for tone in chord:
+                dic = self.abc_dict(tone)
+                deg, delta = self.abc_trans(dic)
+                deg_chord.append(deg)
+            freqs.append(deg_chord)
+            deltas.append(delta)
+        return freqs, deltas
+
+    def make_lol_str(self, splitted):
+        """bring splitted abc string to LOL structur """
+        lol = []
+        for chord in splitted.split(' '):
+            lchord = []
+            for tone in chord.split('|'):
+                lchord.append(tone)
+            if tone.strip() != '':
+                lol.append(lchord)
+        return lol
+
+    def split_abc(self, abc):
+        abc = abc.strip()
+        pattern = r"\[?_?\^?[A-G,a-g,z],*'*\d?/?\d?\]?"
+        l = re.findall(pattern, abc)
+        s = ''
+        sep = ' '
+        for note in l:
+            if note.startswith('['):
+                sep = '|'
+                note = note[1:]
+            if note.endswith(']'):
+                sep = ' '
+                note = note[:-1]
+            s = s + note + sep
+        return s
 
     def abc_dict(self, abc_note):
         pattern = r"(\^?)([A-G,a-g,z])('*,*)(\d*/?\d*)"
@@ -157,38 +221,6 @@ class Abc:
         deg = dpitch[pitch] + octave
         return (deg, dur)
 
-    def degs2freqs(self, degrees):
-        # make all iterabel
-        degs_iter = []
-        for deg in degrees:
-            if not self.is_iter(deg):
-                deg = [deg]
-            degs_iter.append(deg)
-
-        freqs = []
-        for chord in degs_iter:
-            chf = [self.deg2freq(d) for d in chord]
-            freqs.append(chf)
-
-        return freqs
-
-    def abc2deg(self, abc, stretch=1):
-        pattern = r"\^?[A-G,a-g,z]'*,*\d*/?\d*"
-        notes = re.findall(pattern, abc)
-
-        # make list of dicts with keys vorz, pitch, oc, len
-        ldict = [self.abc_dict(note) for note in notes]
-
-        # make list of degree tuples
-        ldeg = [self.abc_trans(dic) for dic in ldict]
-
-        # make a long degree and dur list
-        degrees, durs = list(zip(*ldeg))
-
-        durs = [d * stretch for d in durs]
-
-        return degrees, durs
-
     def deg2freq(self, degree):
         """convert single degree to frequency"""
         if degree < 0:
@@ -213,14 +245,7 @@ class Abc:
         htone_index = htone_index - deminish
 
         freq = htones[htone_index] * (2 ** oc)
-        return freq
-
-    def is_iter(self, x):
-        try:
-            _ = (e for e in x)
-            return True
-        except TypeError:
-            return False
+        return round(freq, 2)
 
 
 class Seq:
@@ -284,14 +309,14 @@ def my_instrument(freq, length, amp):
     sig1 = Sig(le).rect(freq).mul(0.2)
     sig2 = Sig(le).rect(freq * 1.01).mul(0.2)
     res = sig1 + sig2
-    return res * env * amp
+    return res * env * 0.3
     """
     return instr_def
 
 
 def get_abc_str():
     abc = """\
-CDEFG2G2 AAAAG4 AAAAG4 FFFFE2E2 GGGGC4
+C/2E/2G/2[EGc]
         """
     return abc
 
@@ -310,7 +335,7 @@ def test_instr(freq, length, amp):
 
 if __name__ == '__main__':
     # test a instrument for error solving
-    #test = test_instr(440, 1)
+    # test = test_instr(440, 1)
 
     layout = [
         [sg.Multiline('def', key='-INSTR-', size=(70, 20))],
@@ -346,7 +371,7 @@ if __name__ == '__main__':
                 sig1 = Sig(le).rect(freq).mul(0.2)
                 sig2 = Sig(le).rect(freq * 1.01).mul(0.2)
                 res = sig1 + sig2
-                return res * env * amp
+                return res * env * 0.5
 
             try:
                 exec(instr_str.strip())
