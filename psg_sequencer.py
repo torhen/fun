@@ -334,9 +334,21 @@ if __name__ == '__main__':
 
             instr_str = values['-INSTR-']
             abc_str = values['-ABC-']
+
+            def my_instrument(freq, length, amp):
+                """placeholder def to avoid linter error, also for debugging
+                overwritten by user text"""
+                atk = 0.01
+                sus = length - atk
+                rel = 0.5
+                le = atk + sus + rel
+                env = Sig(le).asr(atk, sus, rel)
+                sig1 = Sig(le).rect(freq).mul(0.2)
+                sig2 = Sig(le).rect(freq * 1.01).mul(0.2)
+                res = sig1 + sig2
+                return res * env * amp
+
             try:
-                # placeholder def to avoid linter error
-                def my_instrument(freq, length, amp): return 0
                 exec(instr_str.strip())
                 # test function
                 test = my_instrument(440, 1, 1)
