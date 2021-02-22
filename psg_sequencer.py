@@ -141,8 +141,8 @@ class Abc:
         self.freqs = freqs
         self.deltas = deltas
 
-        # self.freqs = [[440],[550],[660], [440,550,660]]
-        # self.deltas = [1,1,1,1]
+        print(freqs)
+        print(deltas)
 
     def make_deg_lol(self, lol_str):
         freqs = []
@@ -308,21 +308,19 @@ def get_instr_str():
     instr_def = """\
 def my_instrument(freq, length):
     atk = 0.01
-    sus = length - atk
-    rel = 0.5
+    sus = length
+    rel = 0.01
     le = atk + sus + rel
     env = Sig(le).asr(atk, sus, rel)
-    sig1 = Sig(le).rect(freq * 0.99)
-    sig2 = Sig(le).rect(freq * 1.00)
-    res = sig1 + sig2
-    return res * env
+    sig = Sig(le).rect(freq * 0.99)
+    return sig * env
     """
     return instr_def
 
 
 def get_abc_str():
     abc = """\
-C/2E/2G/2[EGc]
+C/2E/2G/2[ceg]
         """
     return abc
 
@@ -336,6 +334,7 @@ if __name__ == '__main__':
         [sg.Multiline('abd', key='-ABC-', size=(70, 20))],
         [sg.Text('stretch'), sg.Input('1.0', key='-STRETCH-', size=(5,)),
          sg.Text('volume'), sg.Input('0.1', key='-VOL-', size=(5,)),
+         sg.Text('legato'), sg.Input('1.0', key='-LEG-', size=(5,)),
          ],
         [sg.Button('run', key='-RUN-'), sg.Button('stop', key='-STOP-')]
     ]
@@ -378,9 +377,10 @@ if __name__ == '__main__':
 
             stretch = float(values['-STRETCH-'])
             amps = float(values['-VOL-'])
+            legato = float(values['-LEG-'])
 
             # create tho song
-            song = Seq(instr=my_instrument, secs=60, abc=abc_str, amps=amps, legato=0.3, stretch=stretch).Sig
+            song = Seq(instr=my_instrument, secs=60, abc=abc_str, amps=amps, legato=legato, stretch=stretch).Sig
 
             int_array = (song.array * 32767).astype(np.int16)
             wf.write('test.wav', song.sr, int_array)
