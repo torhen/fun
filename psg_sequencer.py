@@ -141,9 +141,6 @@ class Abc:
         self.freqs = freqs
         self.deltas = deltas
 
-        print(freqs)
-        print(deltas)
-
     def make_deg_lol(self, lol_str):
         freqs = []
         deltas = []
@@ -185,7 +182,8 @@ class Abc:
         return s
 
     def abc_dict(self, abc_note):
-        pattern = r"(\^?)([A-G,a-g,z])('*,*)(\d*/?\d*)"
+        pattern = r"([_\^]?)([A-G,a-g,z])('*,*)(\d*/?\d*)"
+
         m = re.match(pattern, abc_note)
         vorz = m.group(1)
         pitch = m.group(2)
@@ -208,6 +206,7 @@ class Abc:
         oc = abc_dict['oc']  # , '
         le = abc_dict['le']  # empty, or /2, or 3/4
 
+        # Torsten degree definition, minus means half tone done
         dpitch = {
             'z': 0,
             'C': 41, 'D': 42, 'E': 43, 'F': 44, 'G': 45, 'A': 46, 'B': 47,
@@ -219,12 +218,20 @@ class Abc:
 
         if le.startswith('/'):
             le = '1' + le
+
         dur = eval(le)
 
         octave = oc.count("'") * 10
         octave = octave - oc.count(",") * 10
 
         deg = dpitch[pitch] + octave
+
+        if vorz == '_':
+            deg = -deg
+
+        if vorz == '^':
+            deg = - (deg + 1)
+
         return (deg, dur)
 
     def deg2freq(self, degree):
@@ -320,7 +327,7 @@ def my_instrument(freq, length):
 
 def get_abc_str():
     abc = """\
-C/2E/2G/2[ceg]
+C/2_E/2G/2[c^dg]
         """
     return abc
 
