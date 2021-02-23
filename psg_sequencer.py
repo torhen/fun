@@ -326,9 +326,9 @@ def my_instrument(freq, length):
 
 
 def get_abc_str():
-    abc = """\
-C/2_E/2G/2[c^dg]
-        """
+    abc = '''\
+"C/2_E/2G/2[c^dg]" * 2
+        '''
     return abc
 
 
@@ -361,6 +361,10 @@ if __name__ == '__main__':
 
             instr_str = values['-INSTR-']
             abc_str = values['-ABC-']
+            try:
+                abc_str = eval(abc_str)
+            except:
+                sg.popup('Error', abc_str)
 
 
             # def my_instrument(freq, length):
