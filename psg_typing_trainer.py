@@ -38,23 +38,36 @@ def main():
             url = values['-URL-']
             lines = get_text(url, line_length)
             txt_content = '\n'.join(lines)
-            #txt_content = "Das ist ein Test\nein weiterer Test"
             txt_pos = 0
-            update_text(txt_field, txt_content, txt_pos, font_size=font_size)
+            pressed_key = None
+            update_text(txt_field, txt_content, txt_pos, font_size=font_size, pressed_key=pressed_key)
         elif len(event) == 1:   # key strokes
-            print(event)
+            pressed_key = event
             if txt_pos < len(txt_content) - 1:
                 txt_pos += 1
-            update_text(txt_field, txt_content, txt_pos, font_size=font_size)
+            res = update_text(txt_field, txt_content, txt_pos, font_size=font_size, pressed_key=pressed_key)
+            if res == False:
+                txt_pos = txt_pos - 1
+                update_text(txt_field, txt_content, txt_pos, font_size=font_size, pressed_key=pressed_key)
 
 
-def update_text(txt_field, txt_content, txt_pos, font_size):
+def update_text(txt_field, txt_content, txt_pos, font_size, pressed_key):
+    print(pressed_key, txt_content[txt_pos-1])
+    if pressed_key == txt_content[txt_pos-1] or pressed_key is None or pressed_key == '§':  # escape
+        cursor_color = '#00AA00'
+        ret = True
+    else:
+        cursor_color = '#FF0000'
+        ret = False
+
     txt_field.update('')
     txt_field.print(txt_content[:txt_pos], end='', text_color='black')
-    txt_field.print(txt_content[txt_pos], end='', text_color='white', background_color='#00AA00')
+    txt_field.print(txt_content[txt_pos], end='', text_color='white', background_color=cursor_color)
     txt_field.print(txt_content[txt_pos+1:], end='', text_color='black')
     txt_field.set_focus()
     txt_field.set_vscroll_position(0)
+
+    return ret
 
 
 if __name__ == '__main__':
