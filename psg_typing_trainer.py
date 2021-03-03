@@ -19,6 +19,8 @@ class Content:
         self.cursor_line = 0
         self.cursor_char = 0
         self.line_length = line_length
+        self.all_lines = []
+        self.first_displayed_line = 0
 
     def from_url(self, url):
         r = requests.get(url)
@@ -29,9 +31,7 @@ class Content:
         text = [line for line in text if len(line) > 1]
         text = '\n'.join(text)
         lines = textwrap.wrap(text, self.line_length, break_long_words=False)
-        self.lines = lines
         self.pos = 0
-
 
     def from_url2(self, url):
         r = requests.get(url)
@@ -45,13 +45,14 @@ class Content:
         text = [line for line in text if len(line) > 1]
         text = '\n'.join(text)
         lines = textwrap.wrap(text, self.line_length, break_long_words=False)
-        self.lines = lines
+        self.all_lines = lines
+        self.lines = self.all_lines
         self.pos = 0
 
     def print_text(self):
         pos = 0
         self.graph.erase()
-        lines = self.lines
+        lines = self.lines[:]
         for i, line in enumerate(lines):
             self.graph.draw_text(line, location=(0, pos),
                     text_location=sg.TEXT_LOCATION_TOP_LEFT,
@@ -108,16 +109,31 @@ class Content:
         if line < 0 or line >= len(self.lines):
             return '§'
         if char <0 or char >= len(self.lines[line]):
-            return '§E'
+            return '§'
         return self.lines[line][char]
 
     def key_press(self, pressed_key):
-
         cursor_letter = self.get_cursor_letter()
+        # print(pressed_key, cursor_letter)
         if pressed_key == cursor_letter:
             self.move_cursor(1, 0)
         else:
             self.set_cur_color('red')
+
+    def down(self, nlines):
+        x, y = self.get_cursor()
+        self.first_displayed_line += nlines
+
+        if self.first_displayed_line < 0:
+            self.first_displayed_line = 0
+            return
+
+        if self.first_displayed_line >= len(self.all_lines):
+            self.first_displayed_line == len(self.all_lines)
+
+        self.lines = self.all_lines[self.first_displayed_line:]
+        self.print_text()
+        self.set_cursor(x, y - nlines)
 
 
 def main():
@@ -125,8 +141,8 @@ def main():
     font_size = 14
     canvas_size = (800, 500)
 
-
     layout = [[sg.Input(key='-URL-', size=(100,),default_text='http://www.spiegel.de'), sg.Button('get', key='-GET-')],
+              [sg.Button('down', key='-DOWN-'), sg.Button('up', key='-UP-')],
               [sg.Graph(canvas_size=canvas_size, key='-TXT-',
                         graph_bottom_left=(0, canvas_size[0]), graph_top_right=(canvas_size[0], 0),
                         background_color='white',
@@ -171,6 +187,12 @@ def main():
         elif len(event) == 1:   # key strokes
             pressed_key = event
             content.key_press(pressed_key)
+
+        elif event == '-DOWN-':
+            content.down(1)
+
+        elif event == '-UP-':
+            content.down(-1)
 
         else:
             print(event)
