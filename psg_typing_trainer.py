@@ -2,11 +2,12 @@ import PySimpleGUI as sg
 from bs4 import BeautifulSoup as BS
 import requests
 import textwrap
+import html2text
 
 
 class Content:
 
-    def __init__(self, graph, canvas_size):
+    def __init__(self, graph, canvas_size, line_length):
         self.graph = graph # type:sg.graph
         self.lines = []
         self.font = ('Courier', 14)
@@ -17,9 +18,9 @@ class Content:
         self.red = '#FF0000'
         self.cursor_line = 0
         self.cursor_char = 0
+        self.line_length = line_length
 
-
-    def from_url(self, url, line_length):
+    def from_url(self, url):
         r = requests.get(url)
         html = r.text
         soup = BS(html, 'html.parser')
@@ -27,7 +28,23 @@ class Content:
         text = text.split('\n')
         text = [line for line in text if len(line) > 1]
         text = '\n'.join(text)
-        lines = textwrap.wrap(text, line_length, break_long_words=False)
+        lines = textwrap.wrap(text, self.line_length, break_long_words=False)
+        self.lines = lines
+        self.pos = 0
+
+
+    def from_url2(self, url):
+        r = requests.get(url)
+        html = r.text
+
+        h = html2text.HTML2Text()
+        h.ignore_links = True
+        text = h.handle(html)
+
+        text = text.split('\n')
+        text = [line for line in text if len(line) > 1]
+        text = '\n'.join(text)
+        lines = textwrap.wrap(text, self.line_length, break_long_words=False)
         self.lines = lines
         self.pos = 0
 
@@ -72,6 +89,7 @@ class Content:
         curs_y = self.cursor_line * self.line_spacing + self.line_spacing
         self.graph.relocate_figure(self.cursor_obj_green, curs_x, curs_y)
         self.graph.relocate_figure(self.cursor_obj_red, curs_x, curs_y)
+        self.set_cur_color('green')
 
     def set_cur_color(self, color):
         if color == 'red':
@@ -103,7 +121,7 @@ class Content:
 
 
 def main():
-    line_length = 70
+    line_length = 30 #70
     font_size = 14
     canvas_size = (800, 500)
 
@@ -118,7 +136,7 @@ def main():
     win = sg.Window('type trainer', layout, return_keyboard_events=True, use_default_focus=False)
 
     graph = win['-TXT-']  # type:Graph
-    content = Content(graph, canvas_size=canvas_size)
+    content = Content(graph, canvas_size=canvas_size, line_length=line_length)
 
     while True:
         event, values = win.read()
@@ -127,10 +145,10 @@ def main():
             break
         elif event == '-GET-':
             url = values['-URL-']
-            content.from_url(url, line_length)
+            content.from_url2(url)
             content.print_text()
 
-        elif ord(event[0]) == 13:
+        elif ord(event[0]) == 13: # return
             print('return pressed')
             x, y = content.get_cursor()
             content.set_cursor(0, y + 1)
@@ -156,7 +174,6 @@ def main():
 
         else:
             print(event)
-
 
 
 if __name__ == '__main__':
