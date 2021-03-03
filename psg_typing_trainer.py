@@ -142,7 +142,8 @@ def main():
     canvas_size = (800, 500)
 
     layout = [[sg.Input(key='-URL-', size=(100,),default_text='http://www.spiegel.de'), sg.Button('get', key='-GET-')],
-              [sg.Button('down', key='-DOWN-'), sg.Button('up', key='-UP-')],
+              [sg.Button('down', key='-DOWN-'), sg.Button('up', key='-UP-'),
+               sg.Button('page down', key='-PGDN-'), sg.Button('page up', key='-PGUP-')],
               [sg.Graph(canvas_size=canvas_size, key='-TXT-',
                         graph_bottom_left=(0, canvas_size[0]), graph_top_right=(canvas_size[0], 0),
                         background_color='white',
@@ -193,6 +194,14 @@ def main():
 
         elif event == '-UP-':
             content.down(-1)
+
+        elif event == '-PGDN-':
+            content.down(10)
+            content.move_cursor(0, 10)
+
+        elif event == '-PGUP-':
+            content.down(-10)
+            content.move_cursor(0, -10)
 
         else:
             print(event)
