@@ -14,6 +14,7 @@ class Content:
         self.char_spacing = 11
         self.canvas_size = canvas_size
         self.green = "#00AA00"
+        self.red = '#FF0000'
         self.cursor_line = 0
         self.cursor_char = 0
 
@@ -45,7 +46,13 @@ class Content:
         top_left = (self.cursor_char * self.char_spacing, self.line_spacing)
         bottom_right = (self.char_spacing, self.line_spacing)
 
-        self.cursor_obj = self.graph.draw_rectangle(
+        self.cursor_obj_red = self.graph.draw_rectangle(
+                                top_left=top_left,
+                                bottom_right=bottom_right,
+                                line_color=self.red,
+                                line_width=5)
+
+        self.cursor_obj_green = self.graph.draw_rectangle(
                                 top_left=top_left,
                                 bottom_right=bottom_right,
                                 line_color=self.green,
@@ -63,20 +70,43 @@ class Content:
 
         curs_x = self.cursor_char * self.char_spacing
         curs_y = self.cursor_line * self.line_spacing + self.line_spacing
-        self.graph.relocate_figure(self.cursor_obj, curs_x, curs_y)
+        self.graph.relocate_figure(self.cursor_obj_green, curs_x, curs_y)
+        self.graph.relocate_figure(self.cursor_obj_red, curs_x, curs_y)
+
+    def set_cur_color(self, color):
+        if color == 'red':
+            self.graph.send_figure_to_back(self.cursor_obj_green)
+        else:
+            self.graph.send_figure_to_back(self.cursor_obj_red)
 
     def move_cursor(self, dx, dy):
         cur_x, cur_y = self.get_cursor()
         self.set_cursor(cur_x + dx, cur_y + dy)
+        self.set_cur_color('green')
 
-    def key_press(self, text_field, pressed_key):
-        print(pressed_key)
+    def get_cursor_letter(self):
+        line = self.cursor_line
+        char = self.cursor_char
+        if line < 0 or line >= len(self.lines):
+            return '§'
+        if char <0 or char >= len(self.lines[line]):
+            return '§E'
+        return self.lines[line][char]
+
+    def key_press(self, pressed_key):
+
+        cursor_letter = self.get_cursor_letter()
+        if pressed_key == cursor_letter:
+            self.move_cursor(1, 0)
+        else:
+            self.set_cur_color('red')
 
 
 def main():
     line_length = 70
     font_size = 14
     canvas_size = (800, 500)
+
 
     layout = [[sg.Input(key='-URL-', size=(100,),default_text='http://www.spiegel.de'), sg.Button('get', key='-GET-')],
               [sg.Graph(canvas_size=canvas_size, key='-TXT-',
@@ -88,17 +118,22 @@ def main():
     win = sg.Window('type trainer', layout, return_keyboard_events=True, use_default_focus=False)
 
     graph = win['-TXT-']  # type:Graph
+    content = Content(graph, canvas_size=canvas_size)
 
-    line_nmb = 0
     while True:
         event, values = win.read()
+
         if event is None:
             break
         elif event == '-GET-':
             url = values['-URL-']
-            content = Content(graph, canvas_size=canvas_size)
             content.from_url(url, line_length)
             content.print_text()
+
+        elif ord(event[0]) == 13:
+            print('return pressed')
+            x, y = content.get_cursor()
+            content.set_cursor(0, y + 1)
 
         elif event == 'Escape:27':
             print('escape')
@@ -117,7 +152,7 @@ def main():
 
         elif len(event) == 1:   # key strokes
             pressed_key = event
-            content.key_press(text_field, pressed_key=pressed_key)
+            content.key_press(pressed_key)
 
         else:
             print(event)
