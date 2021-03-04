@@ -80,14 +80,19 @@ class Content:
 
         self.set_cursor(0, 0)
 
-
     def get_cursor(self):
         return self.cursor_char, self.cursor_line
 
     def set_cursor(self, char, line):
+
+        if char <= 0:
+            char = 0
+
+        if char >= len(self.lines[line]):
+            char = len(self.lines[line])
+
         self.cursor_char = char
         self.cursor_line = line
-
         curs_x = self.cursor_char * self.char_spacing
         curs_y = self.cursor_line * self.line_spacing + self.line_spacing
         self.graph.relocate_figure(self.cursor_obj_green, curs_x, curs_y)
@@ -122,7 +127,6 @@ class Content:
         else:
             self.set_cur_color('red')
 
-
     def find_cursor(self):
         visible_lines = 3
         x, y = self.get_cursor()
@@ -130,13 +134,14 @@ class Content:
 
         if self.first_displayed_line + shift < 0:
             return
+        if self.first_displayed_line + shift >= len(self.all_lines):
+            return
 
         self.first_displayed_line = self.first_displayed_line + shift
         self.lines = self.all_lines[self.first_displayed_line:]
         self.print_text()
         x, y = self.get_cursor()
         self.set_cursor(x, visible_lines)
-
 
     def up_down(self, nlines):
         x, y = self.get_cursor()
