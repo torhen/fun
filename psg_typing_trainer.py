@@ -2,7 +2,6 @@ import PySimpleGUI as sg
 from bs4 import BeautifulSoup as BS
 import requests
 import textwrap
-import html2text
 
 
 class Content:
@@ -34,22 +33,7 @@ class Content:
         self.all_lines = lines
         self.lines = self.all_lines
         self.pos = 0
-
-    def from_url2(self, url):
-        r = requests.get(url)
-        html = r.text
-
-        h = html2text.HTML2Text()
-        h.ignore_links = True
-        text = h.handle(html)
-
-        text = text.split('\n')
-        text = [line for line in text if len(line) > 1]
-        text = '\n'.join(text)
-        lines = textwrap.wrap(text, self.line_length, break_long_words=True)
-        self.all_lines = lines
-        self.lines = self.all_lines
-        self.pos = 0
+        self.graph.set_focus()
 
     def print_text(self):
         pos = 0
@@ -110,6 +94,7 @@ class Content:
         self.set_cursor(cur_x + dx, cur_y + dy)
         self.set_cur_color('green')
 
+
     def get_cursor_letter(self):
         line = self.cursor_line
         char = self.cursor_char
@@ -128,7 +113,7 @@ class Content:
             self.set_cur_color('red')
 
     def find_cursor(self):
-        visible_lines = 3
+        visible_lines = 5
         x, y = self.get_cursor()
         shift = y - visible_lines
 
@@ -164,8 +149,8 @@ def main():
     canvas_size = (800, 500)
 
     layout = [[sg.Input(key='-URL-', size=(100,),default_text='http://www.spiegel.de'), sg.Button('get', key='-GET-')],
-              [sg.Button('down', key='-DOWN-'), sg.Button('up', key='-UP-'), sg.Button('find'),
-               sg.Button('page down', key='-PGDN-'), sg.Button('page up', key='-PGUP-')],
+
+                [sg.Button('page down', key='-PGDN-'), sg.Button('page up', key='-PGUP-')],
               [sg.Graph(canvas_size=canvas_size, key='-TXT-',
                         graph_bottom_left=(0, canvas_size[0]), graph_top_right=(canvas_size[0], 0),
                         background_color='white',
@@ -188,7 +173,6 @@ def main():
             content.print_text()
 
         elif ord(event[0]) == 13:  # return
-            print('return pressed')
             x, y = content.get_cursor()
             content.set_cursor(0, y + 1)
             content.find_cursor()
@@ -204,22 +188,15 @@ def main():
 
         elif event == 'Down:40':
             content.move_cursor(0, 1)
+            content.find_cursor()
 
         elif event == 'Up:38':
             content.move_cursor(0, -1)
+            content.find_cursor()
 
         elif len(event) == 1:   # key strokes
             pressed_key = event
             content.key_press(pressed_key)
-
-        elif event == '-DOWN-':
-            content.up_down(1)
-
-        elif event == '-UP-':
-            content.up_down(-1)
-
-        elif event == 'find':
-            content.find_cursor()
 
         elif event == '-PGDN-':
             content.up_down(10)
