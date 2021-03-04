@@ -1,0 +1,27 @@
+Jump between words using w and b
+--------------------------------
+This is a test for jumping between words.
+
+Jump between start end end of a line using 0 and $
+-------------------------------------------------
+Here is the start and here is the end.
+
+Delete a line using dd and revert this using u.
+----------------------------------------------
+Delete this line, but recover it please.
+
+Create an empty line above using O.
+-----------------------------------
+Create a line above this line.
+
+Create an empty line below using o.
+----------------------------------
+Create a line below this.
+
+Delete whole worde using dw.
+---------------------------
+Delete delte the the doubled doubled words words.
+
+Copy a whole line using yy and copy below with p.
+------------------------------------------------
+Duplicate this line.
