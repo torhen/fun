@@ -122,6 +122,7 @@ class Content:
 
     def down(self, nlines):
         x, y = self.get_cursor()
+        self.set_cursor(0, y)
         self.first_displayed_line += nlines
 
         if self.first_displayed_line < 0:
@@ -133,7 +134,7 @@ class Content:
 
         self.lines = self.all_lines[self.first_displayed_line:]
         self.print_text()
-        self.set_cursor(x, y - nlines)
+        self.set_cursor(0, y - nlines)
 
 
 def main():
