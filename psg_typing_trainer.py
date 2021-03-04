@@ -20,6 +20,7 @@ class Content:
         self.line_length = canvas_size[0] // self.char_spacing - 1
         self.all_lines = []
         self.first_displayed_line = 0
+        self.visible_lines_above = 5
 
     def from_url(self, url):
         r = requests.get(url)
@@ -113,7 +114,7 @@ class Content:
             self.set_cur_color('red')
 
     def find_cursor(self):
-        visible_lines = 5
+        visible_lines = self.visible_lines_above
         x, y = self.get_cursor()
         shift = y - visible_lines
 
