@@ -1,3 +1,10 @@
+Move cursor around using hjkl
+-----------------------------
+***********
+***********
+***********
+***********
+
 Jump between words using w and b
 --------------------------------
 This is a test for jumping between words.
@@ -25,3 +32,16 @@ Delete delte the the doubled doubled words words.
 Copy a whole line using yy and copy below with p.
 ------------------------------------------------
 Duplicate this line.
+
+Delete single letters using x.
+-----------------------------
+D_ele_te t_he u_nde_rsc_or_e.
+
+Replace singele letter using r.
+------------------------------
+RepLacE tHe bIg letTers bY smAll oNes.
+
+Change word using cw.
+--------------------
+VIM are difficult.
+
