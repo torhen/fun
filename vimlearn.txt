@@ -45,3 +45,11 @@ Change word using cw.
 --------------------
 VIM are difficult.
 
+Append at the end of line using A
+---------------------------------
+Write a propper end of this 
+
+Insert at beginning of the line uing I
+--------------------------------------
+is the best text editor.
+
