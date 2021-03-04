@@ -7,7 +7,7 @@ import html2text
 
 class Content:
 
-    def __init__(self, graph, canvas_size, line_length):
+    def __init__(self, graph, canvas_size):
         self.graph = graph # type:sg.graph
         self.lines = []
         self.font = ('Courier', 14)
@@ -18,7 +18,7 @@ class Content:
         self.red = '#FF0000'
         self.cursor_line = 0
         self.cursor_char = 0
-        self.line_length = line_length
+        self.line_length = canvas_size[0] // self.char_spacing - 1
         self.all_lines = []
         self.first_displayed_line = 0
 
@@ -30,7 +30,9 @@ class Content:
         text = text.split('\n')
         text = [line for line in text if len(line) > 1]
         text = '\n'.join(text)
-        lines = textwrap.wrap(text, self.line_length, break_long_words=False)
+        lines = textwrap.wrap(text, self.line_length, break_long_words=True)
+        self.all_lines = lines
+        self.lines = self.all_lines
         self.pos = 0
 
     def from_url2(self, url):
@@ -44,7 +46,7 @@ class Content:
         text = text.split('\n')
         text = [line for line in text if len(line) > 1]
         text = '\n'.join(text)
-        lines = textwrap.wrap(text, self.line_length, break_long_words=False)
+        lines = textwrap.wrap(text, self.line_length, break_long_words=True)
         self.all_lines = lines
         self.lines = self.all_lines
         self.pos = 0
@@ -134,12 +136,10 @@ class Content:
 
         self.lines = self.all_lines[self.first_displayed_line:]
         self.print_text()
-        self.set_cursor(0, y - nlines)
+        self.set_cursor(x, y - nlines)
 
 
 def main():
-    line_length = 30 #70
-    font_size = 14
     canvas_size = (800, 500)
 
     layout = [[sg.Input(key='-URL-', size=(100,),default_text='http://www.spiegel.de'), sg.Button('get', key='-GET-')],
@@ -154,7 +154,7 @@ def main():
     win = sg.Window('type trainer', layout, return_keyboard_events=True, use_default_focus=False)
 
     graph = win['-TXT-']  # type:Graph
-    content = Content(graph, canvas_size=canvas_size, line_length=line_length)
+    content = Content(graph, canvas_size=canvas_size)
 
     while True:
         event, values = win.read()
@@ -163,10 +163,10 @@ def main():
             break
         elif event == '-GET-':
             url = values['-URL-']
-            content.from_url2(url)
+            content.from_url(url)
             content.print_text()
 
-        elif ord(event[0]) == 13: # return
+        elif ord(event[0]) == 13:  # return
             print('return pressed')
             x, y = content.get_cursor()
             content.set_cursor(0, y + 1)
