@@ -122,7 +122,23 @@ class Content:
         else:
             self.set_cur_color('red')
 
-    def down(self, nlines):
+
+    def find_cursor(self):
+        visible_lines = 3
+        x, y = self.get_cursor()
+        shift = y - visible_lines
+
+        if self.first_displayed_line + shift < 0:
+            return
+
+        self.first_displayed_line = self.first_displayed_line + shift
+        self.lines = self.all_lines[self.first_displayed_line:]
+        self.print_text()
+        x, y = self.get_cursor()
+        self.set_cursor(x, visible_lines)
+
+
+    def up_down(self, nlines):
         x, y = self.get_cursor()
         self.set_cursor(0, y)
         self.first_displayed_line += nlines
@@ -143,7 +159,7 @@ def main():
     canvas_size = (800, 500)
 
     layout = [[sg.Input(key='-URL-', size=(100,),default_text='http://www.spiegel.de'), sg.Button('get', key='-GET-')],
-              [sg.Button('down', key='-DOWN-'), sg.Button('up', key='-UP-'),
+              [sg.Button('down', key='-DOWN-'), sg.Button('up', key='-UP-'), sg.Button('find'),
                sg.Button('page down', key='-PGDN-'), sg.Button('page up', key='-PGUP-')],
               [sg.Graph(canvas_size=canvas_size, key='-TXT-',
                         graph_bottom_left=(0, canvas_size[0]), graph_top_right=(canvas_size[0], 0),
@@ -170,6 +186,7 @@ def main():
             print('return pressed')
             x, y = content.get_cursor()
             content.set_cursor(0, y + 1)
+            content.find_cursor()
 
         elif event == 'Escape:27':
             print('escape')
@@ -191,21 +208,25 @@ def main():
             content.key_press(pressed_key)
 
         elif event == '-DOWN-':
-            content.down(1)
+            content.up_down(1)
 
         elif event == '-UP-':
-            content.down(-1)
+            content.up_down(-1)
+
+        elif event == 'find':
+            content.find_cursor()
 
         elif event == '-PGDN-':
-            content.down(10)
+            content.up_down(10)
             content.move_cursor(0, 10)
 
         elif event == '-PGUP-':
-            content.down(-10)
+            content.up_down(-10)
             content.move_cursor(0, -10)
 
         else:
-            print(event)
+            pass
+            #print(event)
 
 
 if __name__ == '__main__':
