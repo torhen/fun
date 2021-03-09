@@ -15,10 +15,7 @@ class Text:
 
     def draw(self, term):
         x0, y0 = self.location
-        if self.has_focus:
-            print(term.move_xy(x0, y0) + term.red(self.text))
-        else:
-            print(term.move_xy(x0, y0) + self.text)
+        print(term.move_xy(x0, y0) + self.text)
 
     def set_focus(self, state):
         self.has_focus = state
@@ -87,8 +84,7 @@ class Button:
         self.has_focus = state
 
     def letter(self, letter):
-        if letter == 13:
-            print('Button' + self.text + ' pressed.')
+        pass
 
     def get_value(self):
         return ''
