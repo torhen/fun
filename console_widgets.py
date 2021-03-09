@@ -127,12 +127,20 @@ class Window:
     def read(self):
         val = self.term.inkey()
         self.letter(val)
+
         focus_key = self.elements_focus[self.has_focus].get_key()
+
+        if ord(val) == 9:  # capslock
+            win.next_focus()
+
+        elif ord(val) == 13:  # return
+            val = focus_key
 
         values = {}
         for elem in self.elements_focus:
             values[elem.get_key()] = elem.get_value()
-        return val, focus_key, values
+
+        return val, values
 
     def letter(self, letter):
         self.elements_focus[self.has_focus].letter(letter)
@@ -167,23 +175,20 @@ win = Window('test', layout)
 
 with win.term.cbreak(), win.term.hidden_cursor():
     while True:
-        test = ''
-        event, key, values = win.read()
+        event, values = win.read()
         if event == 'q':
             print('app finishes.')
             break
-        elif ord(event) == 9:  # capslock
-            win.next_focus()
-        elif ord(event) == 13:  # return
-            if key == '-CALC-':
-                x = float(values['-X-'])
-                y = float(values['-Y-'])
-                res = x + y
-                win.get_element('-RES-').update(str(res))
-            if key == '-CLEAR-':
-                win.get_element('-X-').update('0')
-                win.get_element('-Y-').update('0')
-            test = key
-        win.draw()
-        print(values)
 
+        if event == '-CALC-':
+            x = float(values['-X-'])
+            y = float(values['-Y-'])
+            res = x + y
+            win.get_element('-RES-').update(str(res))
+
+        if event == '-CLEAR-':
+            win.get_element('-X-').update('0')
+            win.get_element('-Y-').update('0')
+
+        win.draw()
+        print(event, values)
