@@ -48,6 +48,8 @@ class Input:
         self.has_focus = state
 
     def letter(self, letter):
+        if len(letter) > 1:
+            return
         if letter.lower() in "abcdefghijklomnopqrstuvwxyz0123456789.,:' ":
             self.text = self.text + letter
         elif ord(letter) == 127:  # backspace
@@ -109,6 +111,9 @@ class Window:
         self.elements_focus[self.has_focus ].set_focus(True)
         self.draw()
 
+        self.cbreak = self.term.cbreak
+        self.hidden_cursor = self.term.hidden_cursor
+
     def draw(self):
         print(self.term.clear + self.term.home)
 
@@ -126,10 +131,15 @@ class Window:
 
         focus_key = self.elements_focus[self.has_focus].get_key()
 
-        if ord(val) == 9:  # capslock
-            win.next_focus()
+        val = [ord(v) for v in val]
 
-        elif ord(val) == 13:  # return
+        if val == [9] or val == [27, 91, 67] :  # tab arrow right
+            win.next_focus(1)
+
+        if val == [27, 91, 68]:  # arrow left
+            win.next_focus(-1)
+
+        elif val == [13]:  # return
             val = focus_key
 
         values = {}
@@ -141,15 +151,19 @@ class Window:
     def letter(self, letter):
         self.elements_focus[self.has_focus].letter(letter)
 
-    def next_focus(self):
+    def next_focus(self, istep):
         # delete focus of the current
         self.elements_focus[self.has_focus].set_focus(False)
         # increase focus
-        self.has_focus += 1
+        self.has_focus += istep
 
         # if to high, set to zero
         if self.has_focus >= len(self.elements_focus):
             self.has_focus = 0
+
+        if self.has_focus < 0:
+            self.has_focus = len(self.elements_focus) -1
+
         self.elements_focus[self.has_focus ].set_focus(True)
 
     def get_element(self, key):
@@ -169,7 +183,7 @@ layout = [
 
 win = Window('test', layout)
 
-with win.term.cbreak(), win.term.hidden_cursor():
+with win.cbreak(), win.hidden_cursor():
     while True:
         event, values = win.read()
         if event == 'q':
