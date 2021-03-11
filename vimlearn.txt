@@ -53,3 +53,7 @@ Insert at beginning of the line uing I
 --------------------------------------
 is the best text editor.
 
+Bring in right order using dw and P
+-----------------------------------
+fünf vier drei zwei eins .
+
