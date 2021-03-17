@@ -1,5 +1,6 @@
 import arcade
 import pymunk
+import math
 
 space = pymunk.Space()
 space.gravity = 0, -1000
@@ -12,12 +13,16 @@ class Ball:
 
         self.shape = pymunk.Circle(self.body, 20)
         self.shape.elasticity = 0.83
+        self.shape.friction = 100
         space.add(self.body, self.shape)
 
     def draw(self):
         x, y = self.body.position
         r = self.shape.radius
         arcade.draw_circle_outline(x, y, r, color=arcade.color.WHITE)
+        dx = r * math.cos(self.body.angle)
+        dy = r * math.sin(self.body.angle)
+        arcade.draw_line(x, y, x + dx, y + dy, color=arcade.color.WHITE)
 
     def set_pos(self, x, y):
         self.body.position = x, y
@@ -29,6 +34,7 @@ class Plane:
         self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
         self.shape = pymunk.Segment(self.body, (x0, y0), (x1, y1), 5)
         self.shape.elasticity = 0.83
+        self.shape.friction = 100
         space.add(self.body, self.shape)
 
     def draw(self):
