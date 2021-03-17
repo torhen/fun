@@ -64,7 +64,7 @@ class Game(arcade.Window):
         space.step(delta_time)
         x, y = self.ball.body.position
         vel = self.ball.body.velocity[1]
-        if x > 1000 or x < 0 or y < 70 or (abs(vel) < 0.01 and y < 100):
+        if x > 1000 or x < -100 or y < 70 or (abs(vel) < 0.01 and y < 100):
             self.ball.body.position = 50, 500
             self.ball.body.velocity = 0, 0
 
