@@ -2,8 +2,9 @@ import arcade
 import pymunk
 import math
 
+
 space = pymunk.Space()
-space.gravity = 0, -1000
+space.gravity = 0, -800
 
 
 class Ball:
@@ -11,7 +12,8 @@ class Ball:
         self.body = pymunk.Body(1, 1000)
         self.body.position = x, y
 
-        self.shape = pymunk.Circle(self.body, 20)
+        # self.shape = pymunk.Circle(self.body, 20)
+        self.shape = pymunk.Poly.create_box(self.body, size=(50, 50))
         self.shape.elasticity = 0.83
         self.shape.friction = 100
         space.add(self.body, self.shape)
@@ -22,7 +24,9 @@ class Ball:
         arcade.draw_circle_outline(x, y, r, color=arcade.color.WHITE)
         dx = r * math.cos(self.body.angle)
         dy = r * math.sin(self.body.angle)
-        arcade.draw_line(x, y, x + dx, y + dy, color=arcade.color.WHITE)
+        ang = self.body.angle
+        #arcade.draw_line(x, y, x + dx, y + dy, color=arcade.color.WHITE)
+        arcade.draw_rectangle_outline(x, y, 50, 50, color=arcade.color.WHITE,tilt_angle=ang * 180 / math.pi)
 
     def set_pos(self, x, y):
         self.body.position = x, y
