@@ -46,9 +46,9 @@ class Game(arcade.Window):
         super().__init__()
         arcade.set_background_color(arcade.color.BLACK)
 
-        self.ball = Ball(space, 50, 600)
-        self.plane1 = Plane(space, 0, 100, 800, 50)
-        self.plane2 = Plane(space, 0, 50, 800, 85)
+        self.ball = Ball(space, 50, 500)
+        self.plane1 = Plane(space, 0, 100, 300, 50)
+        self.plane2 = Plane(space, 300, 50, 800, 70)
 
     def on_draw(self):
         arcade.start_render()
@@ -60,7 +60,7 @@ class Game(arcade.Window):
         space.step(delta_time)
         x, y = self.ball.body.position
         if x > 800:
-            self.ball.body.position = 50, 600
+            self.ball.body.position = 50, 500
             self.ball.body.velocity = 0, 0
 
 
