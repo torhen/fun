@@ -9,7 +9,7 @@ space.gravity = 0, -800
 
 class Ball:
     def __init__(self, space, x, y):
-        self.body = pymunk.Body(1, 1000)
+        self.body = pymunk.Body(1, 1666)
         self.body.position = x, y
 
         # self.shape = pymunk.Circle(self.body, 20)
@@ -63,8 +63,8 @@ class Game(arcade.Window):
     def on_update(self, delta_time):
         space.step(delta_time)
         x, y = self.ball.body.position
-        vel = self.ball.body.velocity[1]
-        if x > 1000 or x < -100 or y < 70 or (abs(vel) < 0.01 and y < 100):
+        vel = self.ball.body.velocity
+        if x > 1000 or x < -100 or y < 70 or (abs(vel) < 0.01 and y < 300):
             self.ball.body.position = 50, 500
             self.ball.body.velocity = 0, 0
 
