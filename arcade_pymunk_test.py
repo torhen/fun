@@ -47,8 +47,8 @@ class Game(arcade.Window):
         arcade.set_background_color(arcade.color.BLACK)
 
         self.ball = Ball(space, 50, 500)
-        self.plane1 = Plane(space, 0, 100, 300, 50)
-        self.plane2 = Plane(space, 300, 50, 800, 70)
+        self.plane1 = Plane(space, 0, 120, 300, 50)
+        self.plane2 = Plane(space, 300, 50, 800, 50)
 
     def on_draw(self):
         arcade.start_render()
