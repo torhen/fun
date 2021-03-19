@@ -9,11 +9,12 @@ space.gravity = 0, 0
 class Ball:
     def __init__(self, x, y, r):
 
-        self.body = pymunk.Body(1, 16666)
+        self.body = pymunk.Body()
         self.body.position = x, y
         self.body.velocity = random.randint(-500, 500), random.randint(-500, 500)
 
         self.shape = pymunk.Circle(self.body, r)
+        self.shape.density = 1
         self.shape.elasticity = 1
 
         space.add(self.body, self.shape)
@@ -42,18 +43,22 @@ class Plane:
 
 class Game(arcade.Window):
     def __init__(self):
-        super().__init__()
+        super().__init__(resizable=True)
         self.elements = []
 
-        for _ in range(100):
+        for _ in range(200):
             x = random.randint(100, 500)
             y = random.randint(100, 500)
-            self.elements.append( Ball(x, y, 10) )
 
-        self.elements.append( Plane(50, 50, 750, 50) )
-        self.elements.append( Plane(50, 50, 50, 550) )
-        self.elements.append( Plane(50, 550, 750, 550) )
-        self.elements.append( Plane(750, 550, 750, 50) )
+            self.elements.append( Ball(x, y, 7) )
+
+        self.elements.append(Ball(x, y, 30))
+
+        w, h = self.width, self.height
+        self.elements.append( Plane(50, 50, w-50, 50) )
+        self.elements.append( Plane(50, 50, 50, h-50) )
+        self.elements.append( Plane(50, h-50, w-50, h-50) )
+        self.elements.append( Plane(w-50, h-50, w-50, 50) )
 
     def on_draw(self):
         arcade.start_render()
@@ -61,7 +66,8 @@ class Game(arcade.Window):
             elem.draw()
 
     def on_update(self, dt):
-        space.step(dt)
+        space.step(1/60/2)
+
 
 
 game = Game()
