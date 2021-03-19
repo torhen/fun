@@ -44,6 +44,7 @@ class Plane:
 class Game(arcade.Window):
     def __init__(self):
         super().__init__(resizable=True)
+        w, h = self.width, self.height
         self.elements = []
 
         for _ in range(200):
@@ -52,9 +53,8 @@ class Game(arcade.Window):
 
             self.elements.append( Ball(x, y, 7) )
 
-        self.elements.append(Ball(x, y, 30))
+        self.elements.append(Ball(w/2, h/2, 30))   # big ball
 
-        w, h = self.width, self.height
         self.elements.append( Plane(50, 50, w-50, 50) )
         self.elements.append( Plane(50, 50, 50, h-50) )
         self.elements.append( Plane(50, h-50, w-50, h-50) )
