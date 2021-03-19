@@ -8,37 +8,36 @@ space.gravity = 0, 0
 
 class Ball:
     def __init__(self, x, y, r):
-        self.x, self.y, self.r = x, y, r
-        self.color = arcade.color.WHITE
+
         self.body = pymunk.Body(1, 16666)
-        self.body.position = self.x, self.y
+        self.body.position = x, y
         self.body.velocity = random.randint(-500, 500), random.randint(-500, 500)
 
-        self.shape = pymunk.Circle(self.body, self.r)
+        self.shape = pymunk.Circle(self.body, r)
         self.shape.elasticity = 1
 
         space.add(self.body, self.shape)
 
     def draw(self):
-        self.x, self.y = self.body.position
-        arcade.draw_circle_outline(self.x, self.y, self.r, color=self.color)
+        x, y = self.body.position
+        r = self.shape.radius
+        arcade.draw_circle_outline(x, y, r, arcade.color.WHITE)
 
 
 class Plane:
     def __init__(self, x0, y0, x1, y1):
-        self.x0, self.y0, self.x1, self.y1 = x0, y0, x1, y1
-        self.r = 10
-        self.color = arcade.color.WHITE
 
         self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
 
-        self.shape = pymunk.Segment(self.body, (self.x0, self.y0), (self.x1, self.y1), self.r)
+        self.shape = pymunk.Segment(self.body, (x0, y0), (x1, y1), radius=10)
         self.shape.elasticity = 1
 
         space.add(self.body, self.shape)
 
     def draw(self):
-        arcade.draw_line(self.x0, self.y0, self.x1, self.y1, color=self.color)
+        x0, y0 = self.shape.a
+        x1, y1 = self.shape.b
+        arcade.draw_line(x0, y0, x1, y1, color=arcade.color.WHITE)
 
 
 class Game(arcade.Window):
