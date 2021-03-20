@@ -50,7 +50,8 @@ class Game(arcade.Window):
     def __init__(self):
         super().__init__()
         self.ball = Ball(100, 500, 50)
-        self.plane = Plane(0, 100, 700, 50, 5)
+        self.plane1 = Plane(0, 400, 400, 350, 5)
+        self.plane1 = Plane(200, 150, 800, 250, 5)
         self.time = 0
 
     def on_draw(self):
@@ -59,7 +60,7 @@ class Game(arcade.Window):
 
     def on_update(self, dt):
         self.time += 1/60
-        if self.time > 6:
+        if self.time > 8:
             self.time = 0
             self.ball.body.position = 100, 500
             self.ball.body.velocity = 0, 0
