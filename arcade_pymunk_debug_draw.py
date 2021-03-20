@@ -26,33 +26,39 @@ class ArcadeOptions(pymunk.SpaceDebugDrawOptions):
 options = ArcadeOptions()
 
 
-class Ball:
-    def __init__(self, x, y, r):
-        self.body = pymunk.Body()
-        self.body.position = x, y
-        self.shape = pymunk.Circle(self.body, r)
-        self.shape.density = 1
-        self.shape.elasticity = 0.85
-        self.shape.friction = 10
-        space.add(self.body, self.shape)
+def ball(x, y, r):
+    body = pymunk.Body()
+    body.position = x, y
+
+    shape1 = pymunk.Circle(body, r)
+    shape1.density = 1
+    shape1.elasticity = 0.85
+    shape1.friction = 10
+
+    shape2 = pymunk.Circle(body, 0.9*r, offset=(30,0))
+    shape2.density = 1
+    shape2.elasticity = 0.85
+    shape2.friction = 10
+    space.add(body, shape1, shape2)
+    return body
 
 
-class Plane:
-    def __init__(self, x0, y0, x1, y1, r):
-        self.body = pymunk.Body(body_type=pymunk.Body.STATIC)
-        self.shape = pymunk.Segment(self.body, (x0, y0), (x1, y1), r)
-        self.shape.elasticity = 0.85
-        self.shape.friction = 10
-        space.add(self.body, self.shape)
+def plane(x0, y0, x1, y1, r):
+    body = pymunk.Body(body_type=pymunk.Body.STATIC)
+    shape = pymunk.Segment(body, (x0, y0), (x1, y1), r)
+    shape.elasticity = 0.85
+    shape.friction = 10
+    space.add(body, shape)
+    return body
 
 
 class Game(arcade.Window):
     def __init__(self):
         super().__init__()
-        self.ball = Ball(100, 500, 50)
-        self.plane1 = Plane(0, 400, 400, 350, 5)
-        self.plane1 = Plane(200, 150, 800, 250, 5)
         self.time = 0
+        self.ball = ball(100, 500, 50)
+        self.plane1 = plane(0, 450, 500, 350, 5)
+        self.plane1 = plane(0, 50, 800, 200, 5)
 
     def on_draw(self):
         arcade.start_render()
@@ -60,7 +66,7 @@ class Game(arcade.Window):
 
     def on_update(self, dt):
         self.time += 1/60
-        if self.time > 8:
+        if self.time > 9:
             self.time = 0
             self.ball.body.position = 100, 500
             self.ball.body.velocity = 0, 0
