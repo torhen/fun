@@ -30,33 +30,29 @@ class App(arcade.Window):
     def on_update(self, dt):
         space.step(dt)
 
-# ------------ Start another file -----------------------
 
+def main():
+    global space
+    space = pymunk.Space()
+    space.gravity = 0, -500
 
-space = pymunk.Space()
-space.gravity = 0, -500
-
-
-def add_ball(x, y, r):
     body = pymunk.Body()
-    body.position = x, y
-    shape = pymunk.Circle(body, radius=20)
+    body.position = 100, 300
+    shape = pymunk.Circle(body, radius=50)
     shape.density = 1
     shape.friction = 3
     shape.elasticity = 0.9
     space.add(body, shape)
 
-
-def add_plane(x0, y0, x1, y1, r):
     body = pymunk.Body(body_type=pymunk.Body.STATIC)
-    shape = pymunk.Segment(body, (x0, y0), (x1, y1), r)
+    shape = pymunk.Segment(body, (0, 100), (800, 50), 5)
     shape.elasticity = 0.9
     shape.friction = 3
     space.add(body, shape)
 
+    app = App()
+    arcade.run()
 
-add_ball(100, 300, 30)
-add_plane(0, 100, 800, 50, 5)
 
-app = App()
-arcade.run()
+if __name__ == '__main__':
+    main()
