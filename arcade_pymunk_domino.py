@@ -62,7 +62,7 @@ class Game(arcade.Window):
         add_plane(0, 50, 1000, 50, 5)
         add_plane(0, 150, 100, 150, 5)
         self.ball = add_ball(80, 220, 20)
-        for x in range(200, 800, 105):
+        for x in range(200, 800, 100):
             add_rect(pos=(x, 100), wh=(15, 200), r=5)
 
 
