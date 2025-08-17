@@ -5,12 +5,22 @@ dict = {
 }
 keys = list(dict.keys())
 k, k_old = None, None
+
+ncount = 0
 while True:
+    ncount += 1
     while k == k_old:
         k = random.choice(keys)
     k_old = k
     os.system("cls")
+
+
     while True:
-        w = input(f'{k} ')
-        if w == dict[k]:
-            break
+        if ncount // 10 % 2 == 0:
+            r = input(f'{k} ')
+            if r == dict[k]:
+                break
+        else:
+            r = input(f'{dict[k]} ')
+            if r == k:
+                break        
